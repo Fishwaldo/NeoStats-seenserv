@@ -69,9 +69,6 @@ int SeenNickChange (CmdParams *cmdparams) {
 	if (ModIsUserExcluded(cmdparams->source)) {
 		return NS_SUCCESS;
 	}
-	if (ModIsChannelExcluded(cmdparams->channel)) {
-		return NS_SUCCESS;
-	}
 	strlcpy(tmpmsg, cmdparams->source->name, SS_MESSAGESIZE);
 	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_NICKCHANGE);
 	return NS_SUCCESS;
