@@ -28,7 +28,10 @@
  * Signon Events
 */
 int SeenSignon (CmdParams *cmdparams) {
-	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, cmdparams->param, SS_CONNECTED);
+	char tmpmsg[512];
+
+	ircsnprintf(tmpmsg, 512, "%s", cmdparams->param);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_CONNECTED);
 	return NS_SUCCESS;
 }
 
@@ -58,7 +61,10 @@ int SeenKill (CmdParams *cmdparams) {
  * Nick Events
 */
 int SeenNickChange (CmdParams *cmdparams) {
-	addseenentry(cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, cmdparams->source->name, SS_NICKCHANGE);
+	char tmpmsg[512];
+
+	ircsnprintf(tmpmsg, 512, "%s", cmdparams->source->name);
+	addseenentry(cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_NICKCHANGE);
 	return NS_SUCCESS;
 }
 
@@ -66,10 +72,13 @@ int SeenNickChange (CmdParams *cmdparams) {
  * Join Events
 */
 int SeenJoinChan (CmdParams *cmdparams) {
+	char tmpmsg[512];
+
 	if (is_hidden_chan(cmdparams->channel)) {
 		return NS_SUCCESS;
 	}
-	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, cmdparams->channel->name, SS_JOIN);
+	ircsnprintf(tmpmsg, 512, "%s", cmdparams->channel->name);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_JOIN);
 	return NS_SUCCESS;
 }
 
