@@ -1,6 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2004-2005 DeadNotBuried
-** Portions Copyright (c) 1999-2005, NeoStats
+** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, DeadNotBuried
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -36,8 +35,7 @@ int SeenSignon (CmdParams *cmdparams) {
 	if ( SeenServ.verbose == 1 ) {
 		irc_chanalert (sns_bot, "Recording Signon Event (%s)", cmdparams->source->name);
 	}
-	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s", cmdparams->param);
-	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_CONNECTED);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, NULL, SS_CONNECTED);
 	return NS_SUCCESS;
 }
 
@@ -81,8 +79,7 @@ int SeenNickChange (CmdParams *cmdparams) {
 	if ( SeenServ.verbose == 1 ) {
 		irc_chanalert (sns_bot, "Recording Nick Change Event (%s to %s)", cmdparams->param, cmdparams->source->user->uservhostmask);
 	}
-	strlcpy(tmpmsg, cmdparams->source->name, SS_MESSAGESIZE);
-	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_NICKCHANGE);
+	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, cmdparams->source->name, SS_NICKCHANGE);
 	return NS_SUCCESS;
 }
 
@@ -102,8 +99,7 @@ int SeenJoinChan (CmdParams *cmdparams) {
 	if ( SeenServ.verbose == 1 ) {
 		irc_chanalert (sns_bot, "Recording Join Event (%s %s)", cmdparams->source->user->uservhostmask, cmdparams->channel->name);
 	}
-	strlcpy(tmpmsg, cmdparams->channel->name, SS_MESSAGESIZE);
-	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_JOIN);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, cmdparams->channel->name, SS_JOIN);
 	return NS_SUCCESS;
 }
 
@@ -121,7 +117,7 @@ int SeenPartChan (CmdParams *cmdparams) {
 		return NS_SUCCESS;
 	}
 	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Part Event (%s %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->channel->name, cmdparams->param);
+		irc_chanalert (sns_bot, "Recording Part Event (%s %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->channel->name, cmdparams->param ? cmdparams->param : "");
 	}
 	if (cmdparams->param) {
 		ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s (%s)", cmdparams->channel->name, cmdparams->param);

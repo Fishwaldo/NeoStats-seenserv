@@ -4303,7 +4303,5 @@ echo "Configuration complete."
 read -p "Press Enter key to read the release notes"
 clear
 more RELNOTES
-echo "This Module was written by:"
-echo "	DeadNotBuried (dnb@majestic-liaisons.com)"
-echo "Run 'make' (or 'gmake' on some systems) to compile NeoStats."
+echo "Run 'make' (or 'gmake' on some systems) to compile."
 echo "If you require support, see the README file."

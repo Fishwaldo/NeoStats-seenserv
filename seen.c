@@ -1,6 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2004-2005 DeadNotBuried
-** Portions Copyright (c) 1999-2005, NeoStats
+** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, DeadNotBuried
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -44,7 +43,7 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type) 
 	strlcpy(sd->nick, nick, MAXNICK);
 	strlcpy(sd->userhost, host, USERHOSTLEN);
 	strlcpy(sd->uservhost, vhost, USERHOSTLEN);
-	strlcpy(sd->message, message, SS_MESSAGESIZE);
+	strlcpy(sd->message, message ? message : "", SS_MESSAGESIZE);
 	sd->seentype = type;
 	sd->seentime = me.now;
 	lnode_create_append( seenlist, sd );
@@ -119,6 +118,23 @@ int sortlistbytime( const void *key1, const void *key2 )
  * Destroy Seen List
 */
 void destroyseenlist(void) {
+	lnode_t *ln;
+	SeenData *sd;
+
+	/*
+	 * lnode_destroy_auto doesn't seem to free the memory
+	 * (could be wrong here, but memory usage stayed up on
+	 * unloading module, and increased even more when loading)
+	 * so loop through and make sure memory is free.
+	 * since it uses lots of memory for big lists.
+	*/
+	while (list_count(seenlist) > 0) {
+		ln = list_first(seenlist);
+		sd = lnode_get(ln);
+		ns_free(sd);
+		list_delete(seenlist, ln);
+		lnode_destroy(ln);
+	}
 	list_destroy_auto(seenlist);
 }
 
