@@ -5,7 +5,9 @@
 /events.c -text
 /install-sh -text
 /modconfig.h.in -text
+/modconfigwin32.h -text
 /seen.c -text
 /seenserv.c -text
 /seenserv.h -text
+/seenserv.vcproj -text
 /seenserv_help.c -text
