@@ -146,7 +146,7 @@ int SeenKicked (CmdParams *cmdparams) {
 		return NS_SUCCESS;
 	}
 	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Kick Event (%s by %s from %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->source->name, cmdparams->channel->name, cmdparams->param);
+		irc_chanalert (sns_bot, "Recording Kick Event (%s by %s from %s (%s))", cmdparams->target->user->uservhostmask, cmdparams->source->name, cmdparams->channel->name, cmdparams->param);
 	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s by %s (%s)", cmdparams->channel->name, cmdparams->source->name, cmdparams->param);
 	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KICKED);
