@@ -26,6 +26,14 @@
 
 static list_t *seenlist;
 
+static char ttxt[4][12];
+static char th[SS_HOSTSIZE];
+static char dt[SS_GENCHARLEN];
+static char matchstr[SS_HOSTSIZE];
+static char cc[SS_GENCHARLEN];
+static char senf[5][MAXNICK+3];
+static char nickstr[SS_MESSAGESIZE];
+
 /*
  *  add new seen entry to list
 */
@@ -35,9 +43,9 @@ void addseenentry(char *nick, char *user, char *host, char *vhost, char *message
 	removepreviousnick(nick);
 	sd = ns_calloc(sizeof(SeenData));
 	strlcpy(sd->nick, nick, MAXNICK);
-	ircsnprintf(sd->userhost, 512, "%s!%s@%s", nick, user, host);
-	ircsnprintf(sd->uservhost, 512, "%s!%s@%s", nick, user, vhost);
-	strlcpy(sd->message, message, BUFSIZE);
+	ircsnprintf(sd->userhost, SS_HOSTSIZE, "%s!%s@%s", nick, user, host);
+	ircsnprintf(sd->uservhost, SS_HOSTSIZE, "%s!%s@%s", nick, user, vhost);
+	strlcpy(sd->message, message, SS_MESSAGESIZE);
 	sd->seentype = type;
 	sd->seentime = me.now;
 	lnode_create_append( seenlist, sd );
@@ -135,19 +143,37 @@ int sns_cmd_seennick(CmdParams *cmdparams) {
 int CheckSeenData(CmdParams *cmdparams, int checktype) {
 	lnode_t *ln;
 	SeenData *sd;
+	SeenData *sdo;
 	Client *u;
 	Channel *c;
-	int d, h, m, s, mf;
-	char ttxt[4][12];
-	char th[512];
-	char dt[128];
-	char matchstr[512];
-	char cc[128];
+	int d, h, m, s, mf, sef;
 	
-	if (!SeenServ.enable && cmdparams->channel == NULL) {
+	if ( SeenServ.verbose == 1 ) {
+		if (checktype == SS_CHECK_NICK) {
+			irc_chanalert (sns_bot, "SeenNick Command used by %s (SEENNICK %s)", cmdparams->source->name, cmdparams->av[0]);
+		} else if (checktype == SS_CHECK_WILDCARD) {
+			irc_chanalert (sns_bot, "Seen Command used by %s (SEEN %s)", cmdparams->source->name, cmdparams->av[0]);
+		}
+	}
+	if (!SeenServ.enable && cmdparams->channel == NULL && cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER) {
 		return NS_SUCCESS;
 	}
-	if (!SeenServ.enableseenchan && cmdparams->channel != NULL) {
+	if (!SeenServ.enableseenchan && cmdparams->channel != NULL && cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER) {
+		return NS_SUCCESS;
+	}
+	if (ValidateNick(cmdparams->av[0]) == NS_SUCCESS) {
+		u = FindUser(cmdparams->av[0]);
+		if (u) {
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->hostname);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
+				} else {
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
+				}
+			}
+		}
 		return NS_SUCCESS;
 	}
 	if (checktype == SS_CHECK_NICK) {
@@ -160,20 +186,24 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 			return NS_SUCCESS;
 		}
 	}
-	for ( d = 0 ; d < 4 ; d++ ) {
-		ttxt[d][0] = '\0';
+	for ( d = 0 ; d < 5 ; d++ ) {
+		senf[d][0] = '\0';
+		if (d < 4) {
+			ttxt[d][0] = '\0';
+		}
 	}
 	cc[0] = '\0';
-	h = m = s = mf = 0;
+	h = m = s = sef = 0;
 	if (checktype == SS_CHECK_WILDCARD) {
 		if (!strchr(cmdparams->av[0], '*') == NULL) {
-			ircsnprintf(matchstr, 512, "%s", cmdparams->av[0]);
+			ircsnprintf(matchstr, SS_HOSTSIZE, "%s", cmdparams->av[0]);
 		} else {
-			ircsnprintf(matchstr, 512, "*%s*", cmdparams->av[0]);
+			ircsnprintf(matchstr, SS_HOSTSIZE, "*%s*", cmdparams->av[0]);
 		}
 	}
 	ln = list_last(seenlist);
-	while (ln != NULL) {
+	while (ln != NULL && sef < 5) {
+		mf = 0;
 		sd = lnode_get(ln);
 		if (checktype == SS_CHECK_NICK) {
 			if (!ircstrcasecmp(cmdparams->av[0], sd->nick)) {
@@ -185,159 +215,158 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 			}
 		}
 		if (mf) {
-			d = (me.now - sd->seentime);
-			if (d) {
-				s = (d % 60);
-				if (s) {
-					ircsnprintf(ttxt[3], 12, "%d Seconds", s);
-					d -= s;
+			if (!sef) {
+				sdo = ns_calloc( sizeof( SeenData ) );
+				os_memcpy( sdo, sd, sizeof( SeenData ) );
+				if (checktype == SS_CHECK_NICK) {
+					sef = 4;
+				} else {
+					strlcpy(senf[sef], sd->nick, MAXNICK+3);
 				}
-				d = (d / 60);
 			} else {
-				ircsnprintf(ttxt[3], 12, "0 Seconds");
+				ircsnprintf(senf[sef], MAXNICK+3, ", %s", sd->nick);
 			}
+			sef++;
+		}
+		ln = list_prev(seenlist, ln);
+	}
+	if (sef) {
+		d = (me.now - sdo->seentime);
+		if (d > 0) {
+			s = (d % 60);
+			if (s) {
+				ircsnprintf(ttxt[3], 12, "%d Seconds", s);
+				d -= s;
+			}
+			d = (d / 60);
+			m = (d % 60);
+			if (m) {
+				ircsnprintf(ttxt[2], 12, "%d Minutes ", m);
+				d -= m;
+			}
+			d = (d / 60);
+			h = (d % 24);
+			if (h) {
+				ircsnprintf(ttxt[1], 12, "%d Hours ", h);
+				d -= h;
+			}
+			d = (d / 24);
 			if (d) {
-				m = (d % 60);
-				if (m) {
-					ircsnprintf(ttxt[2], 12, "%d Minutes", m);
-					d -= m;
-				}
-				d = (d / 60);
+				ircsnprintf(ttxt[0], 12, "%d Days ", d);
 			}
-			if (d) {
-				h = (d % 24);
-				if (h) {
-					ircsnprintf(ttxt[1], 12, "%d Hours", h);
-					d -= h;
+		} else {
+			ircsnprintf(ttxt[3], 12, "0 Seconds");
+		}
+		ircsnprintf(dt, SS_GENCHARLEN, "%s%s%s%s", ttxt[0], ttxt[1], ttxt[2], ttxt[3]);
+		if (checktype == SS_CHECK_NICK) {
+			nickstr[0] = '\0';
+		} else if (checktype == SS_CHECK_WILDCARD) {
+			ircsnprintf(nickstr, SS_MESSAGESIZE, "The %d most recent matches are: %s%s%s%s%s , ", sef, senf[0], senf[1], senf[2], senf[3], senf[4]);
+		}
+		if ( sdo->seentype == SS_CONNECTED ) {
+			u = FindUser(sdo->nick);
+			if (u) {
+				ircsnprintf(th, SS_HOSTSIZE, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
+				if (!ircstrcasecmp(sdo->userhost, th)) {
+					ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 				}
-				d = (d / 24);
 			}
-			if (d) {
-				ircsnprintf(ttxt[0], 12, "%d Days", d);
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->userhost, dt, cc);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->uservhost, dt, cc);
+				} else {
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen connecting %s ago%s", nickstr, sdo->uservhost, dt, cc);
+				}
 			}
-			ircsnprintf(dt, 128, "%s %s %s %s", ttxt[0], ttxt[1], ttxt[2], ttxt[3]);
-			if ( sd->seentype == SS_CONNECTED ) {
-				u = FindUser(sd->nick);
-				if (u) {
-					ircsnprintf(th, 512, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
-					if (!ircstrcasecmp(sd->userhost, th)) {
-						ircsnprintf(cc, 128, ", %s is currently connected", u->name);
-					}
-				}
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen connecting %s ago%s", sd->userhost, dt, cc);
+		} else if ( sdo->seentype == SS_QUIT ) {
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->userhost, dt, sdo->message);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->uservhost, dt, sdo->message);
 				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen connecting %s ago%s", sd->uservhost, dt, cc);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen connecting %s ago%s", sd->uservhost, dt, cc);
-					}
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->uservhost, dt, sdo->message);
 				}
-				return NS_SUCCESS;
-			} else if ( sd->seentype == SS_QUIT ) {
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen quiting %s ago, stating %s", sd->userhost, dt, sd->message);
+			}
+		} else if ( sdo->seentype == SS_KILLED ) {
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being killed %s ago %s", nickstr, sdo->userhost, dt, sdo->message);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being killed %s ago %s", nickstr, sdo->uservhost, dt, sdo->message);
 				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen quiting %s ago, stating %s", sd->uservhost, dt, sd->message);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen quiting %s ago, stating %s", sd->uservhost, dt, sd->message);
-					}
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen being killed %s ago %s", nickstr, sdo->uservhost, dt, sdo->message);
 				}
-				return NS_SUCCESS;
-			} else if ( sd->seentype == SS_KILLED ) {
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen being killed %s ago %s", sd->userhost, dt, sd->message);
+			}
+		} else if ( sdo->seentype == SS_NICKCHANGE ) {
+			u = FindUser(sdo->message);
+			if (u) {
+				ircsnprintf(th, SS_HOSTSIZE, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
+				if (!ircstrcasecmp(sdo->userhost, th)) {
+					ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
+				}
+			}
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->userhost, dt, sdo->message, cc);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->uservhost, dt, sdo->message, cc);
 				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen being killed %s ago %s", sd->uservhost, dt, sd->message);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen being killed %s ago %s", sd->uservhost, dt, sd->message);
-					}
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->uservhost, dt, sdo->message, cc);
 				}
-				return NS_SUCCESS;
-			} else if ( sd->seentype == SS_NICKCHANGE ) {
-				u = FindUser(sd->message);
-				if (u) {
-					ircsnprintf(th, 512, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
-					if (!ircstrcasecmp(sd->userhost, th)) {
-						ircsnprintf(cc, 128, ", %s is currently connected", u->name);
-					}
-				}
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen changing Nickname %s ago to %s", sd->userhost, dt, sd->message, cc);
-				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen changing Nickname %s ago to %s", sd->uservhost, dt, sd->message, cc);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen changing Nickname %s ago to %s", sd->uservhost, dt, sd->message, cc);
-					}
-				}
-				return NS_SUCCESS;
-			} else if ( sd->seentype == SS_JOIN ) {
-				u = FindUser(sd->nick);
-				if (u) {
-					ircsnprintf(th, 512, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
-					if (!ircstrcasecmp(sd->userhost, th)) {
-						c = FindChannel(sd->message);
-						if (c) {
-							if (IsChannelMember(c, u) && !is_hidden_chan(c)) {
-								ircsnprintf(cc, 128, ", %s is currently in %s", u->name, c->name);
-							}
+			}
+		} else if ( sdo->seentype == SS_JOIN ) {
+			u = FindUser(sdo->nick);
+			if (u) {
+				ircsnprintf(th, SS_HOSTSIZE, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
+				if (!ircstrcasecmp(sdo->userhost, th)) {
+					c = FindChannel(sdo->message);
+					if (c) {
+						if (IsChannelMember(c, u) && !is_hidden_chan(c)) {
+							ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently in %s", u->name, c->name);
 						}
 					}
 				}
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen Joining %s %s ago%s", sd->userhost, sd->message, dt, cc);
-				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen Joining %s %s ago%s", sd->uservhost, sd->message, dt, cc);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen Joining %s %s ago%s", sd->uservhost, sd->message, dt, cc);
-					}
-				}
-				return NS_SUCCESS;
-			} else if ( sd->seentype == SS_PART ) {
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen Parting %s %s ago", sd->userhost, sd->message, dt);
-				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen Parting %s %s", sd->uservhost, sd->message, dt);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen Parting %s %s", sd->uservhost, sd->message, dt);
-					}
-				}
-				return NS_SUCCESS;
-			} else if ( sd->seentype == SS_KICKED ) {
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen being Kicked From %s %s ago", sd->userhost, sd->message, dt);
-				} else {
-					if (cmdparams->channel == NULL) {
-						irc_prefmsg (sns_bot, cmdparams->source, "%s was last seen Kicked From %s %s", sd->uservhost, sd->message, dt);
-					} else {
-						irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s was last seen Kicked From %s %s", sd->uservhost, sd->message, dt);
-					}
-				}
-				return NS_SUCCESS;
 			}
-		} else {
-			ln = list_prev(seenlist, ln);
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->userhost, sdo->message, dt, cc);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->uservhost, sdo->message, dt, cc);
+				} else {
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->uservhost, sdo->message, dt, cc);
+				}
+			}
+		} else if ( sdo->seentype == SS_PART ) {
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Parting %s %s ago", nickstr, sdo->userhost, sdo->message, dt);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Parting %s %s ago", nickstr, sdo->uservhost, sdo->message, dt);
+				} else {
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen Parting %s %s ago", nickstr, sdo->uservhost, sdo->message, dt);
+				}
+			}
+		} else if ( sdo->seentype == SS_KICKED ) {
+			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being Kicked From %s %s ago", nickstr, sdo->userhost, sdo->message, dt);
+			} else {
+				if (cmdparams->channel == NULL) {
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Kicked From %s %s", nickstr, sdo->uservhost, sdo->message, dt);
+				} else {
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen Kicked From %s %s", nickstr, sdo->uservhost, sdo->message, dt);
+				}
+			}
 		}
-	}
-	if (checktype == SS_CHECK_NICK) {
-		u = FindUser(cmdparams->av[0]);
-		if (u) {
-			if (cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "There is a %s connected right now", u->name);
-			} else {
-				irc_chanprivmsg (sns_bot, cmdparams->channel->name, "There is a %s connected right now", u->name);
-			}
+		ns_free(sdo);
+		return NS_SUCCESS;
+	} else if (checktype == SS_CHECK_NICK) {
+		if (cmdparams->channel == NULL) {
+			irc_prefmsg (sns_bot, cmdparams->source, "Sorry %s, I can't remember seeing anyone called %s", cmdparams->source->name, cmdparams->av[0]);
 		} else {
-			if (cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "Sorry %s, I can't remember seeing anyone called %s", cmdparams->source->name, cmdparams->av[0]);
-			} else {
-				irc_chanprivmsg (sns_bot, cmdparams->channel->name, "Sorry %s, I can't remember seeing anyone called %s", cmdparams->source->name, cmdparams->av[0]);
-			}
+			irc_chanprivmsg (sns_bot, cmdparams->channel->name, "Sorry %s, I can't remember seeing anyone called %s", cmdparams->source->name, cmdparams->av[0]);
 		}
 	} else if (checktype == SS_CHECK_WILDCARD) {
 		if (cmdparams->channel == NULL) {
@@ -357,6 +386,9 @@ int sns_cmd_remove(CmdParams *cmdparams) {
 	SeenData *sd;
 	int i;
 	
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Remove Command used by %s (REMOVE %s)", cmdparams->source->name, cmdparams->av[0]);
+	}
 	i = 0;
 	ln = list_first(seenlist);
 	while (ln != NULL) {
@@ -377,6 +409,9 @@ int sns_cmd_remove(CmdParams *cmdparams) {
 	} else {
 		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%d matching entries removed", i);
 	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "%d matching entries removed", i);
+	}
 	return NS_SUCCESS;
 }
 
@@ -388,6 +423,9 @@ int sns_cmd_stats(CmdParams *cmdparams) {
 	SeenData *sd;
 	int sc[10], i;
 
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Stats Command used by %s (STATS)", cmdparams->source->name);
+	}
 	for ( i = 0 ; i < 10 ; i++ ) {
 		sc[i] = 0;
 	}

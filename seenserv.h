@@ -21,25 +21,6 @@
 ** $Id$
 */
 
-Bot *sns_bot;
-
-struct SeenServ {
-	int exclusions;
-	int enable;
-	int enableseenchan;
-	char seenchan[MAXCHANLEN];
-	int maxseenentries;
-} SeenServ;
-
-typedef struct SeenData {
-	char nick[MAXNICK];
-	char userhost[PARAMSIZE];
-	char uservhost[PARAMSIZE];
-	char message[BUFSIZE];
-	int seentype;
-	time_t seentime;
-} SeenData;
-
 /* Defines */
 #define SS_CHECK_WILDCARD	0x00000001	/* WildCard Entry Check */
 #define SS_CHECK_NICK		0x00000002	/* Nick Entry Check */
@@ -52,12 +33,38 @@ typedef struct SeenData {
 #define SS_PART			0x00000006	/* Seen Part Channel Type */
 #define SS_KICKED		0x00000007	/* Seen Kicked Channel Type */
 
+#define SS_HOSTSIZE		MAXNICK+MAXUSER+MAXHOST /* Max Length to store Nick!User@<Host|Vhost> */
+#define SS_MESSAGESIZE		300 /* Message Field Size */
+#define SS_GENCHARLEN		128 /* General Character Field Length */
+
+/* Variables And Structs */
+Bot *sns_bot;
+
+struct SeenServ {
+	int verbose;
+	int exclusions;
+	int enable;
+	int enableseenchan;
+	char seenchan[MAXCHANLEN];
+	int maxseenentries;
+} SeenServ;
+
+typedef struct SeenData {
+	char nick[MAXNICK];
+	char userhost[SS_HOSTSIZE];
+	char uservhost[SS_HOSTSIZE];
+	char message[SS_MESSAGESIZE];
+	int seentype;
+	time_t seentime;
+} SeenData;
+
 /* SeenServ Module Help */
 extern const char *sns_help_set_exclusions[];
 extern const char *sns_help_set_enable[];
 extern const char *sns_help_set_enableseenchan[];
 extern const char *sns_help_set_seenchan[];
 extern const char *sns_help_set_maxentries[];
+extern const char *sns_help_set_verbose[];
 extern const char sns_help_seen_oneline[];
 extern const char sns_help_seennick_oneline[];
 extern const char sns_help_remove_oneline[];

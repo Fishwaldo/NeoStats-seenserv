@@ -59,6 +59,12 @@ const char *sns_help_set_maxentries[] = {
 	NULL
 };
 
+const char *sns_help_set_verbose[] = {
+	"\2VERBOSE <ON|OFF>\2",
+	"Enable verbose mode.",
+	NULL
+};
+
 const char sns_help_seen_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_seennick_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_remove_oneline[] = "Removes Entries that match nick!user@host";
