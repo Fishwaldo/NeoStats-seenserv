@@ -41,6 +41,9 @@ typedef struct SeenData {
 } SeenData;
 
 /* Defines */
+#define SS_CHECK_WILDCARD	0x00000001	/* WildCard Entry Check */
+#define SS_CHECK_NICK		0x00000002	/* Nick Entry Check */
+
 #define SS_CONNECTED		0x00000001	/* Seen Connection Type */
 #define SS_QUIT			0x00000002	/* Seen Quit Type */
 #define SS_KILLED		0x00000003	/* Seen Killed Type */
@@ -88,5 +91,6 @@ int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
 int sns_cmd_seenhost(CmdParams *cmdparams);
 int sns_cmd_seennick(CmdParams *cmdparams);
+int CheckSeenData(CmdParams *cmdparams, int checktype);
 int sns_cmd_remove(CmdParams *cmdparams);
 int sns_cmd_stats(CmdParams *cmdparams);
