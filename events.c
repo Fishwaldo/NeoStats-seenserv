@@ -24,6 +24,7 @@
 #include "seenserv.h"
 
 static char tmpmsg[SS_MESSAGESIZE];
+static char tmpmsg2[SS_MESSAGESIZE];
 
 /*
  * Signon Events
@@ -79,7 +80,9 @@ int SeenNickChange (CmdParams *cmdparams) {
 	if ( SeenServ.verbose == 1 ) {
 		irc_chanalert (sns_bot, "Recording Nick Change Event (%s to %s)", cmdparams->param, cmdparams->source->user->uservhostmask);
 	}
-	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, cmdparams->source->name, SS_NICKCHANGE);
+	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s!%s@%s", cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->hostname);
+	ircsnprintf(tmpmsg2, SS_MESSAGESIZE, "%s!%s@%s", cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->vhost);
+	addseenentry(cmdparams->param, tmpmsg, tmpmsg2, cmdparams->source->name, SS_NICKCHANGE);
 	return NS_SUCCESS;
 }
 
