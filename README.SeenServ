@@ -1,0 +1,90 @@
+
+SeenServ Manual
+_________________________________________________________________
+
+   1. Prerequisites and Installation.
+
+        1.1. Compiling and Installation
+
+   2. Basic Configuration
+
+   Welcome  to  the  SeenServ Manual. This document will aid you in
+   setting up and running SeenServ on your IRC network.
+
+   SeenServ is a Nick Seen Service that Tracks when users were last seen.
+
+1. Prerequisites and Installation.
+
+   SeenServ is designed to run on Top of NeoStats 3.
+   Please  refer  to  the  NeoStats website  for more
+   information on the requirements for NeoStats.
+
+   SeenServ requires the following:
+     * NeoStats 3.0 or Higher correctly installed and Running
+     * The time to read this entire document.
+
+
+1.1. Compiling and Installation
+
+   As  long  as  you  have  successfully setup NeoStats, and installed it
+   correctly,  Compiling  SeenServ is very simple and straight forward. First
+   you  must  extract  the  files  from  the download package. This is as
+   simple as:
+bash$ tar -xzf SeenServ-<ver>.tar.gz
+
+   This  should  then  create  a  directory  called  SeenServ-<version> where
+   <version> is the Version of SeenServ. Then Proceed to Change into the SeenServ
+   directory, and run Configure as follows:
+bash$./configure [--with-neostats=<dir>]
+
+   --with-neostats=<dir> should be used if your neostats directory is not
+   in a standard location (~/NeoStats3.0/). Replace <dir> with the full path
+   to your NeoStats installation directory (NOT SOURCE DIRECTORY)
+
+   If  the  configuration did not produce a error, you may then move onto
+   Compiling  SeenServ.  Compiling  is simply just issuing the "make" command
+   (or "gmake" if you are running BSD):
+
+   Again,  check  for  Error  messages.  As  long  as there are not error messages,
+   "make install" (or "gmake" if you are running BSD) will install SeenServ, this
+   README file, and any auxiluary files needed into your NeoStats directory:
+
+   Once  Installation  is  complete, you can either configure NeoStats to
+   load SeenServ when it starts, or load SeenServ via IRC.
+
+   To  Configure  NeoStats  to automatically load SeenServ when it boots, add
+   the  following  line  to  your  "neostats.conf"  file  in  the NeoStats
+   directory:
+
+   LOAD_MODULE SeenServ
+
+   To  load  SeenServ  via  IRC,  you must make sure you have the appropriate
+   permissions and issue the following command:
+
+   /msg neostats load SeenServ
+
+   Thats  it.  SeenServ  is  now  loaded  and ready for use (in fact, it will
+   already be running now, but read on for futher information.
+
+2. Basic Configuration
+
+   By default, SeenServ will use the Global Exclusions, will ignore any SEEN or
+   SEENNICK commands from NON Opers, and will only keep the last 2000 Nicknames
+   it has seen.
+   
+   To change the default of the last 2000 nicks being kept, use
+   SET MAXSEENENTRIES <number> where <number> is the number required.
+   NOTE: Minimum is 100 , Maximum is 100,000
+   NOTE 2: 2000 entries will use approximately 1.4 MB of RAM.
+   
+   To Disable the Global Exclusion list and only use the Local one (NOTE: Both
+   can be used concurrently) use SET EXCLUSIONS OFF
+   
+   To enable the Seen Channel (Defaults to #Seen) use SETENABLESEENCHAN ON , SeenServ
+   will then join the Seen Channel to accept Commands in channel from Non Opers.
+   
+   To Enable the Seen commands for Non Opers via Private message to SeenServ, use
+   SET ENABLE ON
+   
+   NOTE: IRCops and above may always use the SEEN and SEENNICK commands.
+   
