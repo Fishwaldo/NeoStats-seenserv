@@ -2,6 +2,10 @@ SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
 3.0.a3-dev
+ - Add Enable/Disable options for each event (D)
+ - Use Nick only on connection Event output for non Opers, as Vhosts are
+   not known when event recorded (D)
+ - Add output from event recording when verbose set on (D)
  - Add Module Exclusions (D)
  - change REMOVE command to DEL (D)
  - use new core user struct fields userhostmask and uservhostmask (breaks

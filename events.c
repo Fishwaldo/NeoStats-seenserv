@@ -33,6 +33,9 @@ int SeenSignon (CmdParams *cmdparams) {
 	if (ModIsUserExcluded(cmdparams->source)) {
 		return NS_SUCCESS;
 	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Signon Event (%s)", cmdparams->source->name);
+	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s", cmdparams->param);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_CONNECTED);
 	return NS_SUCCESS;
@@ -44,6 +47,9 @@ int SeenSignon (CmdParams *cmdparams) {
 int SeenQuit (CmdParams *cmdparams) {
 	if (ModIsUserExcluded(cmdparams->source)) {
 		return NS_SUCCESS;
+	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Quit Event (%s (%s))", cmdparams->source->user->uservhostmask, cmdparams->param);
 	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "(%s)", cmdparams->param);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_QUIT);
@@ -57,7 +63,10 @@ int SeenKill (CmdParams *cmdparams) {
 	if (ModIsUserExcluded(cmdparams->target)) {
 		return NS_SUCCESS;
 	}
-	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "by %s (%s)", cmdparams->target->name, cmdparams->source->name, cmdparams->param);
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Kill Event (%s by %s (%s))", cmdparams->target->user->uservhostmask, cmdparams->source->name, cmdparams->param);
+	}
+	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "by %s (%s)", cmdparams->source->name, cmdparams->param);
 	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KILLED);
 	return NS_SUCCESS;
 }
@@ -68,6 +77,9 @@ int SeenKill (CmdParams *cmdparams) {
 int SeenNickChange (CmdParams *cmdparams) {
 	if (ModIsUserExcluded(cmdparams->source)) {
 		return NS_SUCCESS;
+	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Nick Change Event (%s to %s)", cmdparams->param, cmdparams->source->user->uservhostmask);
 	}
 	strlcpy(tmpmsg, cmdparams->source->name, SS_MESSAGESIZE);
 	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_NICKCHANGE);
@@ -87,6 +99,9 @@ int SeenJoinChan (CmdParams *cmdparams) {
 	if (ModIsChannelExcluded(cmdparams->channel)) {
 		return NS_SUCCESS;
 	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Join Event (%s %s)", cmdparams->source->user->uservhostmask, cmdparams->channel->name);
+	}
 	strlcpy(tmpmsg, cmdparams->channel->name, SS_MESSAGESIZE);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_JOIN);
 	return NS_SUCCESS;
@@ -104,6 +119,9 @@ int SeenPartChan (CmdParams *cmdparams) {
 	}
 	if (ModIsChannelExcluded(cmdparams->channel)) {
 		return NS_SUCCESS;
+	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Part Event (%s %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->channel->name, cmdparams->param);
 	}
 	if (cmdparams->param) {
 		ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s (%s)", cmdparams->channel->name, cmdparams->param);
@@ -126,6 +144,9 @@ int SeenKicked (CmdParams *cmdparams) {
 	}
 	if (ModIsChannelExcluded(cmdparams->channel)) {
 		return NS_SUCCESS;
+	}
+	if ( SeenServ.verbose == 1 ) {
+		irc_chanalert (sns_bot, "Recording Kick Event (%s by %s from %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->source->name, cmdparams->channel->name, cmdparams->param);
 	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s by %s (%s)", cmdparams->channel->name, cmdparams->source->name, cmdparams->param);
 	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KICKED);

@@ -46,6 +46,13 @@ struct SeenServ {
 	int enableseenchan;
 	char seenchan[MAXCHANLEN];
 	int maxseenentries;
+	int eventsignon;
+	int eventquit;
+	int eventkill;
+	int eventnick;
+	int eventjoin;
+	int eventpart;
+	int eventkick;
 } SeenServ;
 
 typedef struct SeenData {
@@ -57,13 +64,20 @@ typedef struct SeenData {
 	time_t seentime;
 } SeenData;
 
-/* SeenServ Module Help */
+/* SeenServ Module Help - seenserv_help.c */
 extern const char *sns_help_set_exclusions[];
 extern const char *sns_help_set_enable[];
 extern const char *sns_help_set_enableseenchan[];
 extern const char *sns_help_set_seenchan[];
 extern const char *sns_help_set_maxentries[];
 extern const char *sns_help_set_verbose[];
+extern const char *sns_help_set_eventsignon[];
+extern const char *sns_help_set_eventquit[];
+extern const char *sns_help_set_eventkill[];
+extern const char *sns_help_set_eventnick[];
+extern const char *sns_help_set_eventjoin[];
+extern const char *sns_help_set_eventpart[];
+extern const char *sns_help_set_eventkick[];
 extern const char sns_help_seen_oneline[];
 extern const char sns_help_seennick_oneline[];
 extern const char sns_help_del_oneline[];
@@ -86,6 +100,13 @@ int SeenKicked (CmdParams *cmdparams);
 static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_exclusions (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_eventsignon( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventquit( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventkill( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
 
 /* seen.c */
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);

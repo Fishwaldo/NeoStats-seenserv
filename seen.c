@@ -273,9 +273,9 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->userhost, dt, cc);
 			} else {
 				if (cmdparams->channel == NULL) {
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->uservhost, dt, cc);
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->nick, dt, cc);
 				} else {
-					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen connecting %s ago%s", nickstr, sdo->uservhost, dt, cc);
+					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s%s was last seen connecting %s ago%s", nickstr, sdo->nick, dt, cc);
 				}
 			}
 		} else if ( sdo->seentype == SS_QUIT ) {
@@ -390,6 +390,7 @@ int sns_cmd_del(CmdParams *cmdparams) {
 	while (ln != NULL) {
 		sd = lnode_get(ln);
 		if (match(cmdparams->av[0], sd->userhost) || match(cmdparams->av[0], sd->uservhost)) {
+			DBADelete( "seendata", sd->nick);
 			i++;
 			ns_free(sd);
 			ln2 = list_next(seenlist, ln);

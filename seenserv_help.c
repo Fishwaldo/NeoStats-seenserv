@@ -65,6 +65,48 @@ const char *sns_help_set_verbose[] = {
 	NULL
 };
 
+const char *sns_help_set_eventsignon[] = {
+	"\2EVENTSIGNON <ON|OFF>\2",
+	"Enable Connection Event Recording.",
+	NULL
+};
+
+const char *sns_help_set_eventquit[] = {
+	"\2EVENTQUIT <ON|OFF>\2",
+	"Enable Quit Event Recording.",
+	NULL
+};
+
+const char *sns_help_set_eventkill[] = {
+	"\2EVENTKILL <ON|OFF>\2",
+	"Enable Kill Event Recording.",
+	NULL
+};
+
+const char *sns_help_set_eventnick[] = {
+	"\2EVENTNICK <ON|OFF>\2",
+	"Enable Nick Change Event Recording.",
+	NULL
+};
+
+const char *sns_help_set_eventjoin[] = {
+	"\2EVENTJOIN <ON|OFF>\2",
+	"Enable Channel Join Event Recording.",
+	NULL
+};
+
+const char *sns_help_set_eventpart[] = {
+	"\2EVENTPART <ON|OFF>\2",
+	"Enable Channel Part Event Recording.",
+	NULL
+};
+
+const char *sns_help_set_eventkick[] = {
+	"\2EVENTKICK <ON|OFF>\2",
+	"Enable Channel Kick Event Recording.",
+	NULL
+};
+
 const char sns_help_seen_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_seennick_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_del_oneline[] = "Deletes Seen Entries that match nick!user@host";
