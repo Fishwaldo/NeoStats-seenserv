@@ -93,7 +93,7 @@ void addseenentry(char *nick, char *user, char *host, char *vhost, char *message
 void checkseenlistlimit(void);
 void removepreviousnick(char *nn);
 void loadseendata(void);
-int loadseenrecords(void *data);
+int loadseenrecords(void *data, int size);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
 int sns_cmd_seenhost(CmdParams *cmdparams);

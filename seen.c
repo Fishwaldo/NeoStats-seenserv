@@ -95,6 +95,11 @@ void removepreviousnick(char *nn) {
 /*
  * Load Saved Seen Records
 */
+void loadseendata(void) {
+	seenlist = list_create( -1 );
+	DBAFetchRows( "seendata", loadseenrecords );
+	list_sort( seenlist, sortlistbytime );
+}
 int loadseenrecords(void *data, int size)
 {
 	SeenData *sd;
@@ -103,11 +108,6 @@ int loadseenrecords(void *data, int size)
 	os_memcpy( sd, data, sizeof( SeenData ) );
 	lnode_create_append( seenlist, sd );
 	return NS_FALSE;
-}
-void loadseendata(void) {
-	seenlist = list_create( -1 );
-	DBAFetchRows( "seendata", loadseenrecords );
-	list_sort( seenlist, sortlistbytime );
 }
 int sortlistbytime( const void *key1, const void *key2 )
 {
