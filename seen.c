@@ -195,7 +195,6 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 	h = m = s = sef = 0;
 	if (checktype == SS_CHECK_WILDCARD) {
 		if (!strchr(cmdparams->av[0], '*') == NULL) {
-
 			ircsnprintf(matchstr, USERHOSTLEN, "%s", cmdparams->av[0]);
 		} else {
 			ircsnprintf(matchstr, USERHOSTLEN, "*%s*", cmdparams->av[0]);
@@ -376,15 +375,15 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 }
 
 /*
- * Remove all matching entries
+ * Delete all matching entries
 */
-int sns_cmd_remove(CmdParams *cmdparams) {
+int sns_cmd_del(CmdParams *cmdparams) {
 	lnode_t *ln, *ln2;
 	SeenData *sd;
 	int i;
 	
 	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Remove Command used by %s (REMOVE %s)", cmdparams->source->name, cmdparams->av[0]);
+		irc_chanalert (sns_bot, "Delete Command used by %s (DEL %s)", cmdparams->source->name, cmdparams->av[0]);
 	}
 	i = 0;
 	ln = list_first(seenlist);
@@ -402,12 +401,12 @@ int sns_cmd_remove(CmdParams *cmdparams) {
 		}
 	}
 	if (cmdparams->channel == NULL) {
-		irc_prefmsg (sns_bot, cmdparams->source, "%d matching entries removed", i);
+		irc_prefmsg (sns_bot, cmdparams->source, "%d matching entries deleted", i);
 	} else {
-		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%d matching entries removed", i);
+		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%d matching entries deleted", i);
 	}
 	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "%d matching entries removed", i);
+		irc_chanalert (sns_bot, "%d matching entries deleted", i);
 	}
 	return NS_SUCCESS;
 }

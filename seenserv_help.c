@@ -67,7 +67,7 @@ const char *sns_help_set_verbose[] = {
 
 const char sns_help_seen_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_seennick_oneline[] = "Displays Last Seen Nicks";
-const char sns_help_remove_oneline[] = "Removes Entries that match nick!user@host";
+const char sns_help_del_oneline[] = "Deletes Seen Entries that match nick!user@host";
 const char sns_help_stats_oneline[] = "Displays Seen Statistics";
 
 const char *sns_help_seen[] = {
@@ -84,10 +84,10 @@ const char *sns_help_seennick[] = {
 	NULL
 };
 
-const char *sns_help_remove[] = {
-	"Syntax: \2REMOVE <entry>\2",
+const char *sns_help_del[] = {
+	"Syntax: \2DEL <hostmask>\2",
 	"",
-	"Removes any entries matching the nick!user@host provided.",
+	"Deletes any entries matching the nick!user@host provided.",
 	NULL
 };
 

@@ -66,11 +66,11 @@ extern const char *sns_help_set_maxentries[];
 extern const char *sns_help_set_verbose[];
 extern const char sns_help_seen_oneline[];
 extern const char sns_help_seennick_oneline[];
-extern const char sns_help_remove_oneline[];
+extern const char sns_help_del_oneline[];
 extern const char sns_help_stats_oneline[];
 extern const char *sns_help_seen[];
 extern const char *sns_help_seennick[];
-extern const char *sns_help_remove[];
+extern const char *sns_help_del[];
 extern const char *sns_help_stats[];
 
 /* events.c */
@@ -98,5 +98,5 @@ void destroyseenlist(void);
 int sns_cmd_seenhost(CmdParams *cmdparams);
 int sns_cmd_seennick(CmdParams *cmdparams);
 int CheckSeenData(CmdParams *cmdparams, int checktype);
-int sns_cmd_remove(CmdParams *cmdparams);
+int sns_cmd_del(CmdParams *cmdparams);
 int sns_cmd_stats(CmdParams *cmdparams);

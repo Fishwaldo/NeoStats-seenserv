@@ -2,6 +2,8 @@ SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
 3.0.a3-dev
+ - Add Module Exclusions (D)
+ - change REMOVE command to DEL (D)
  - use new core user struct fields userhostmask and uservhostmask (breaks
    the seendata file again but should be the last time hopefully) (D)
  - SEEN and SEENNICK available to NS_ULEVEL_LOCOPER even if disabled

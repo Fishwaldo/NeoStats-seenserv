@@ -30,6 +30,9 @@ static char tmpmsg[SS_MESSAGESIZE];
  * Signon Events
 */
 int SeenSignon (CmdParams *cmdparams) {
+	if (ModIsUserExcluded(cmdparams->source)) {
+		return NS_SUCCESS;
+	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s", cmdparams->param);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_CONNECTED);
 	return NS_SUCCESS;
@@ -39,6 +42,9 @@ int SeenSignon (CmdParams *cmdparams) {
  * Quit Events
 */
 int SeenQuit (CmdParams *cmdparams) {
+	if (ModIsUserExcluded(cmdparams->source)) {
+		return NS_SUCCESS;
+	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "(%s)", cmdparams->param);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_QUIT);
 	return NS_SUCCESS;
@@ -48,6 +54,9 @@ int SeenQuit (CmdParams *cmdparams) {
  * Kill Events
 */
 int SeenKill (CmdParams *cmdparams) {
+	if (ModIsUserExcluded(cmdparams->target)) {
+		return NS_SUCCESS;
+	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "by %s (%s)", cmdparams->target->name, cmdparams->source->name, cmdparams->param);
 	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KILLED);
 	return NS_SUCCESS;
@@ -57,6 +66,12 @@ int SeenKill (CmdParams *cmdparams) {
  * Nick Events
 */
 int SeenNickChange (CmdParams *cmdparams) {
+	if (ModIsUserExcluded(cmdparams->source)) {
+		return NS_SUCCESS;
+	}
+	if (ModIsChannelExcluded(cmdparams->channel)) {
+		return NS_SUCCESS;
+	}
 	strlcpy(tmpmsg, cmdparams->source->name, SS_MESSAGESIZE);
 	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_NICKCHANGE);
 	return NS_SUCCESS;
@@ -69,6 +84,12 @@ int SeenJoinChan (CmdParams *cmdparams) {
 	if (is_hidden_chan(cmdparams->channel)) {
 		return NS_SUCCESS;
 	}
+	if (ModIsUserExcluded(cmdparams->source)) {
+		return NS_SUCCESS;
+	}
+	if (ModIsChannelExcluded(cmdparams->channel)) {
+		return NS_SUCCESS;
+	}
 	strlcpy(tmpmsg, cmdparams->channel->name, SS_MESSAGESIZE);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_JOIN);
 	return NS_SUCCESS;
@@ -79,6 +100,12 @@ int SeenJoinChan (CmdParams *cmdparams) {
 */
 int SeenPartChan (CmdParams *cmdparams) {
 	if (is_hidden_chan(cmdparams->channel)) {
+		return NS_SUCCESS;
+	}
+	if (ModIsUserExcluded(cmdparams->source)) {
+		return NS_SUCCESS;
+	}
+	if (ModIsChannelExcluded(cmdparams->channel)) {
 		return NS_SUCCESS;
 	}
 	if (cmdparams->param) {
@@ -95,6 +122,12 @@ int SeenPartChan (CmdParams *cmdparams) {
 */
 int SeenKicked (CmdParams *cmdparams) {
 	if (is_hidden_chan(cmdparams->channel)) {
+		return NS_SUCCESS;
+	}
+	if (ModIsUserExcluded(cmdparams->target)) {
+		return NS_SUCCESS;
+	}
+	if (ModIsChannelExcluded(cmdparams->channel)) {
 		return NS_SUCCESS;
 	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s by %s (%s)", cmdparams->channel->name, cmdparams->source->name, cmdparams->param);
