@@ -33,7 +33,6 @@
 #define SS_PART			0x00000006	/* Seen Part Channel Type */
 #define SS_KICKED		0x00000007	/* Seen Kicked Channel Type */
 
-#define SS_HOSTSIZE		MAXNICK+MAXUSER+MAXHOST /* Max Length to store Nick!User@<Host|Vhost> */
 #define SS_MESSAGESIZE		300 /* Message Field Size */
 #define SS_GENCHARLEN		128 /* General Character Field Length */
 
@@ -51,8 +50,8 @@ struct SeenServ {
 
 typedef struct SeenData {
 	char nick[MAXNICK];
-	char userhost[SS_HOSTSIZE];
-	char uservhost[SS_HOSTSIZE];
+	char userhost[USERHOSTLEN];
+	char uservhost[USERHOSTLEN];
 	char message[SS_MESSAGESIZE];
 	int seentype;
 	time_t seentime;
@@ -89,7 +88,7 @@ static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_exclusions (CmdParams *cmdparams, SET_REASON reason);
 
 /* seen.c */
-void addseenentry(char *nick, char *user, char *host, char *vhost, char *message, int type);
+void addseenentry(char *nick, char *host, char *vhost, char *message, int type);
 void checkseenlistlimit(void);
 void removepreviousnick(char *nn);
 void loadseendata(void);

@@ -27,9 +27,8 @@
 static list_t *seenlist;
 
 static char ttxt[4][12];
-static char th[SS_HOSTSIZE];
 static char dt[SS_GENCHARLEN];
-static char matchstr[SS_HOSTSIZE];
+static char matchstr[USERHOSTLEN];
 static char cc[SS_GENCHARLEN];
 static char senf[5][MAXNICK+3];
 static char nickstr[SS_MESSAGESIZE];
@@ -37,14 +36,14 @@ static char nickstr[SS_MESSAGESIZE];
 /*
  *  add new seen entry to list
 */
-void addseenentry(char *nick, char *user, char *host, char *vhost, char *message, int type) {
+void addseenentry(char *nick, char *host, char *vhost, char *message, int type) {
 	SeenData *sd;
 	
 	removepreviousnick(nick);
 	sd = ns_calloc(sizeof(SeenData));
 	strlcpy(sd->nick, nick, MAXNICK);
-	ircsnprintf(sd->userhost, SS_HOSTSIZE, "%s!%s@%s", nick, user, host);
-	ircsnprintf(sd->uservhost, SS_HOSTSIZE, "%s!%s@%s", nick, user, vhost);
+	strlcpy(sd->userhost, host, USERHOSTLEN);
+	strlcpy(sd->uservhost, vhost, USERHOSTLEN);
 	strlcpy(sd->message, message, SS_MESSAGESIZE);
 	sd->seentype = type;
 	sd->seentime = me.now;
@@ -196,9 +195,10 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 	h = m = s = sef = 0;
 	if (checktype == SS_CHECK_WILDCARD) {
 		if (!strchr(cmdparams->av[0], '*') == NULL) {
-			ircsnprintf(matchstr, SS_HOSTSIZE, "%s", cmdparams->av[0]);
+
+			ircsnprintf(matchstr, USERHOSTLEN, "%s", cmdparams->av[0]);
 		} else {
-			ircsnprintf(matchstr, SS_HOSTSIZE, "*%s*", cmdparams->av[0]);
+			ircsnprintf(matchstr, USERHOSTLEN, "*%s*", cmdparams->av[0]);
 		}
 	}
 	ln = list_last(seenlist);
@@ -266,8 +266,7 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 		if ( sdo->seentype == SS_CONNECTED ) {
 			u = FindUser(sdo->nick);
 			if (u) {
-				ircsnprintf(th, SS_HOSTSIZE, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
-				if (!ircstrcasecmp(sdo->userhost, th)) {
+				if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask)) {
 					ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 				}
 			}
@@ -303,8 +302,7 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 		} else if ( sdo->seentype == SS_NICKCHANGE ) {
 			u = FindUser(sdo->message);
 			if (u) {
-				ircsnprintf(th, SS_HOSTSIZE, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
-				if (!ircstrcasecmp(sdo->userhost, th)) {
+				if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask)) {
 					ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 				}
 			}
@@ -320,8 +318,7 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 		} else if ( sdo->seentype == SS_JOIN ) {
 			u = FindUser(sdo->nick);
 			if (u) {
-				ircsnprintf(th, SS_HOSTSIZE, "%s!%s@%s", u->name, u->user->username, u->user->hostname);
-				if (!ircstrcasecmp(sdo->userhost, th)) {
+				if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask)) {
 					c = FindChannel(sdo->message);
 					if (c) {
 						if (IsChannelMember(c, u) && !is_hidden_chan(c)) {
@@ -446,7 +443,6 @@ int sns_cmd_stats(CmdParams *cmdparams) {
 		irc_prefmsg (sns_bot, cmdparams->source, "%d Channel Kicks", sc[SS_KICKED]);
 		irc_prefmsg (sns_bot, cmdparams->source, "End Of Statistics");
 	} else {
-		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "Stats command used");
 		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "Seen Statistics (Current Records Per Type)");
 		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%d Connections", sc[SS_CONNECTED]);
 		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%d Quits", sc[SS_QUIT]);

@@ -31,7 +31,7 @@ static char tmpmsg[SS_MESSAGESIZE];
 */
 int SeenSignon (CmdParams *cmdparams) {
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s", cmdparams->param);
-	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_CONNECTED);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_CONNECTED);
 	return NS_SUCCESS;
 }
 
@@ -40,7 +40,7 @@ int SeenSignon (CmdParams *cmdparams) {
 */
 int SeenQuit (CmdParams *cmdparams) {
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "(%s)", cmdparams->param);
-	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_QUIT);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_QUIT);
 	return NS_SUCCESS;
 }
 
@@ -49,7 +49,7 @@ int SeenQuit (CmdParams *cmdparams) {
 */
 int SeenKill (CmdParams *cmdparams) {
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "by %s (%s)", cmdparams->target->name, cmdparams->source->name, cmdparams->param);
-	addseenentry(cmdparams->target->name, cmdparams->target->user->username, cmdparams->target->user->hostname, cmdparams->target->user->vhost, tmpmsg, SS_KILLED);
+	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KILLED);
 	return NS_SUCCESS;
 }
 
@@ -58,7 +58,7 @@ int SeenKill (CmdParams *cmdparams) {
 */
 int SeenNickChange (CmdParams *cmdparams) {
 	strlcpy(tmpmsg, cmdparams->source->name, SS_MESSAGESIZE);
-	addseenentry(cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_NICKCHANGE);
+	addseenentry(cmdparams->param, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_NICKCHANGE);
 	return NS_SUCCESS;
 }
 
@@ -70,7 +70,7 @@ int SeenJoinChan (CmdParams *cmdparams) {
 		return NS_SUCCESS;
 	}
 	strlcpy(tmpmsg, cmdparams->channel->name, SS_MESSAGESIZE);
-	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_JOIN);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_JOIN);
 	return NS_SUCCESS;
 }
 
@@ -86,7 +86,7 @@ int SeenPartChan (CmdParams *cmdparams) {
 	} else {
 		strlcpy(tmpmsg, cmdparams->channel->name, SS_MESSAGESIZE);
 	}
-	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_PART);
+	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_PART);
 	return NS_SUCCESS;
 }
 
@@ -98,6 +98,6 @@ int SeenKicked (CmdParams *cmdparams) {
 		return NS_SUCCESS;
 	}
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s by %s (%s)", cmdparams->channel->name, cmdparams->source->name, cmdparams->param);
-	addseenentry(cmdparams->target->name, cmdparams->target->user->username, cmdparams->target->user->hostname, cmdparams->target->user->vhost, tmpmsg, SS_KICKED);
+	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KICKED);
 	return NS_SUCCESS;
 }
