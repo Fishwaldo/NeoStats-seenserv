@@ -1,1 +1,11 @@
 * text=auto !eol
+/Makefile.in -text
+/configure -text
+/configure.in -text
+/events.c -text
+/install-sh -text
+/modconfig.h.in -text
+/seen.c -text
+/seenserv.c -text
+/seenserv.h -text
+/seenserv_help.c -text
