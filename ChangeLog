@@ -5,7 +5,7 @@ Fish (F), Mark (M), DeadNotBuried (D)
  - SEEN and SEENNICK now checks to see if passed data is a valid nickname,
    and if the nick is online before traversing the Seen Data List (D)
  - Added Verbose Setting. (D)
- - SEENNICK now shows up to the last 5 Nicknames that match, but only shows
+ - SEEN now shows up to the last 5 Nicknames that match, but only shows
    the full details for the last entry (D)
  - Updated SeenData Strucure field sizes, this breaks the file so
    SeenServseendata.gdbm must be removed when updating (D)
