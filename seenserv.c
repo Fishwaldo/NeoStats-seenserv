@@ -56,7 +56,7 @@ static bot_setting sns_settings[]=
 	{"ENABLE",		&SeenServ.enable,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_enable,		NULL,			(void *)0 },
 	{"ENABLESEENCHAN",	&SeenServ.enableseenchan,	SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_enableseenchan,	NULL,			(void *)0 },
 	{"SEENCHANNAME",	&SeenServ.seenchan,		SET_TYPE_CHANNEL,	0,	MAXCHANLEN,	NS_ULEVEL_ADMIN,	NULL,	sns_help_set_seenchan,		sns_set_seenchan,	(void *)"#Seen" },
-	{"MAXSEENENTRIES",	&SeenServ.maxseenentries,	SET_TYPE_INT,		100,	100000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_maxentries,	sns_set_maxentries,	(void *)2000 },
+	{"MAXENTRIES",		&SeenServ.maxentries,		SET_TYPE_INT,		100,	100000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_maxentries,	sns_set_maxentries,	(void *)2000 },
 	{"EVENTSIGNON",		&SeenServ.eventsignon,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventsignon,	sns_set_eventsignon,	(void *)1 },
 	{"EVENTQUIT",		&SeenServ.eventquit,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventquit,		sns_set_eventquit,	(void *)1 },
 	{"EVENTKILL",		&SeenServ.eventkill,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventkill,		sns_set_eventkill,	(void *)1 },
@@ -64,6 +64,7 @@ static bot_setting sns_settings[]=
 	{"EVENTJOIN",		&SeenServ.eventjoin,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventjoin,		sns_set_eventjoin,	(void *)1 },
 	{"EVENTPART",		&SeenServ.eventpart,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventpart,		sns_set_eventpart,	(void *)1 },
 	{"EVENTKICK",		&SeenServ.eventkick,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventkick,		sns_set_eventkick,	(void *)1 },
+	{"EXPIRETIME",		&SeenServ.expiretime,		SET_TYPE_INT,		0,	1000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_expiretime,	sns_set_expiretime,	(void *)0 },
 	{NULL,			NULL,				0,			0,	0,		0,			NULL,	NULL,				NULL, 			NULL },
 };
 
@@ -178,7 +179,7 @@ static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason) {
  * Change Max Entries Saved
 */
 static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason) {
-	if (reason == SET_VALIDATE) {
+	if (reason == SET_CHANGE) {
 		checkseenlistlimit();
 		return NS_SUCCESS;
 	}
@@ -298,3 +299,15 @@ static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason )
 	}
 	return NS_SUCCESS;
 }
+
+/*
+ * Check Entry Saved Time
+*/
+static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason) {
+	if (reason == SET_CHANGE && SeenServ.expiretime > 0) {
+		checkseenlistlimit();
+		return NS_SUCCESS;
+	}
+	return NS_SUCCESS;
+}
+

@@ -44,7 +44,7 @@ struct SeenServ {
 	int enable;
 	int enableseenchan;
 	char seenchan[MAXCHANLEN];
-	int maxseenentries;
+	int maxentries;
 	int eventsignon;
 	int eventquit;
 	int eventkill;
@@ -52,6 +52,7 @@ struct SeenServ {
 	int eventjoin;
 	int eventpart;
 	int eventkick;
+	int expiretime;
 } SeenServ;
 
 typedef struct SeenData {
@@ -77,6 +78,7 @@ extern const char *sns_help_set_eventnick[];
 extern const char *sns_help_set_eventjoin[];
 extern const char *sns_help_set_eventpart[];
 extern const char *sns_help_set_eventkick[];
+extern const char *sns_help_set_expiretime[];
 extern const char sns_help_seen_oneline[];
 extern const char sns_help_seennick_oneline[];
 extern const char sns_help_del_oneline[];
@@ -106,6 +108,7 @@ static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
 
 /* seen.c */
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);

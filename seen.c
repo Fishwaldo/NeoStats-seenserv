@@ -58,13 +58,15 @@ void checkseenlistlimit(void) {
 	lnode_t *ln;
 	SeenData *sd;
 
-	while (list_count(seenlist) > SeenServ.maxseenentries) {
-		ln = list_first(seenlist);
-		sd = lnode_get(ln);
+	ln = list_first(seenlist);
+	sd = lnode_get(ln);
+	while ((list_count(seenlist) > SeenServ.maxentries) || (SeenServ.expiretime > 0 && (me.now - (SeenServ.expiretime * 86400)) > sd->seentime)) {
 		DBADelete( "seendata", sd->nick);
 		ns_free(sd);
 		list_delete(seenlist, ln);
 		lnode_destroy(ln);
+		ln = list_first(seenlist);
+		sd = lnode_get(ln);
 	}
 }
 

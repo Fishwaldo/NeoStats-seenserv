@@ -106,6 +106,13 @@ const char *sns_help_set_eventkick[] = {
 	NULL
 };
 
+const char *sns_help_set_expiretime[] = {
+	"\2EXPIRETIME <days>\2",
+	"expire records older than set days.",
+	"NOTE: 0 Days expires on MAXENTRIES only.",
+	NULL
+};
+
 const char sns_help_seen_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_seennick_oneline[] = "Displays Last Seen Nicks";
 const char sns_help_del_oneline[] = "Deletes Seen Entries that match nick!user@host";
