@@ -30,7 +30,7 @@ static char tmpmsg[SS_MESSAGESIZE];
  * Signon Events
 */
 int SeenSignon (CmdParams *cmdparams) {
-	strlcpy(tmpmsg, cmdparams->param, SS_MESSAGESIZE);
+	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s", cmdparams->param);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->username, cmdparams->source->user->hostname, cmdparams->source->user->vhost, tmpmsg, SS_CONNECTED);
 	return NS_SUCCESS;
 }
