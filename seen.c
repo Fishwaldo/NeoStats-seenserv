@@ -173,8 +173,8 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 					irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
 				}
 			}
+			return NS_SUCCESS;
 		}
-		return NS_SUCCESS;
 	}
 	if (checktype == SS_CHECK_NICK) {
 		if (ValidateNick(cmdparams->av[0]) == NS_FAILURE) {
@@ -258,10 +258,10 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 			ircsnprintf(ttxt[3], 12, "0 Seconds");
 		}
 		ircsnprintf(dt, SS_GENCHARLEN, "%s%s%s%s", ttxt[0], ttxt[1], ttxt[2], ttxt[3]);
-		if (checktype == SS_CHECK_NICK) {
+		if (checktype == SS_CHECK_NICK || sef == 1) {
 			nickstr[0] = '\0';
 		} else if (checktype == SS_CHECK_WILDCARD) {
-			ircsnprintf(nickstr, SS_MESSAGESIZE, "The %d most recent matches are: %s%s%s%s%s , ", sef, senf[0], senf[1], senf[2], senf[3], senf[4]);
+			ircsnprintf(nickstr, SS_MESSAGESIZE, "The %d most recent matches are - %s%s%s%s%s : ", sef, senf[0], senf[1], senf[2], senf[3], senf[4]);
 		}
 		if ( sdo->seentype == SS_CONNECTED ) {
 			u = FindUser(sdo->nick);
