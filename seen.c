@@ -54,19 +54,26 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type) 
 /*
  *  Removes SeenData if records past max entries setting
 */
-void checkseenlistlimit(void) {
-	lnode_t *ln;
+void checkseenlistlimit(void)
+{
+	int current;
+	int maxage;
+	lnode_t *ln, *ln2;
 	SeenData *sd;
 
-	ln = list_first(seenlist);
-	sd = lnode_get(ln);
-	while ((list_count(seenlist) > SeenServ.maxentries) || (SeenServ.expiretime > 0 && (me.now - (SeenServ.expiretime * 86400)) > sd->seentime)) {
-		DBADelete( "seendata", sd->nick);
-		ns_free(sd);
-		list_delete(seenlist, ln);
-		lnode_destroy(ln);
-		ln = list_first(seenlist);
-		sd = lnode_get(ln);
+	current = list_count(seenlist);
+	maxage = me.now - ( SeenServ.expiretime * 86400 );
+	ln = list_first( seenlist );
+	sd = lnode_get( ln );
+	while( ( current > SeenServ.maxentries ) || ( SeenServ.expiretime > 0 && ( maxage > sd->seentime ) ) )
+	{
+		ln2 = list_next( seenlist, ln );
+		DBADelete( "seendata", sd->nick );
+		ns_free( sd );
+		list_delete( seenlist, ln );
+		lnode_destroy( ln );
+		sd = lnode_get( ln2 );
+		current --;
 	}
 }
 
