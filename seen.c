@@ -307,9 +307,8 @@ int CheckSeenData(CmdParams *cmdparams, int checktype)
 		} else {
 			ircsnprintf(dt, SS_GENCHARLEN, "0 Seconds");
 		}
-		if (checktype == SS_CHECK_NICK || sef == 1) {
-			nickstr[0] = '\0';
-		} else if (checktype == SS_CHECK_WILDCARD) {
+		nickstr[0] = '\0';
+		if (checktype == SS_CHECK_WILDCARD) {
 			ircsnprintf(nickstr, SS_MESSAGESIZE, "The %d most recent matches are - %s%s%s%s%s : ", sef, senf[0], senf[1], senf[2], senf[3], senf[4]);
 		}
 		switch( sdo->seentype )
@@ -423,14 +422,14 @@ int sns_cmd_status(CmdParams *cmdparams)
 		sc[sd->seentype]++;
 		ln = list_next(seenlist, ln);
 	}
-	seen_report( cmdparams, "Seen Statistics (Current Records Per Type)");
-	seen_report( cmdparams, "%d Connections", sc[SS_CONNECTED]);
-	seen_report( cmdparams, "%d Quits", sc[SS_QUIT]);
-	seen_report( cmdparams, "%d Kills", sc[SS_KILLED]);
-	seen_report( cmdparams, "%d Nick Changes", sc[SS_NICKCHANGE]);
-	seen_report( cmdparams, "%d Channel Joins", sc[SS_JOIN]);
-	seen_report( cmdparams, "%d Channel Parts", sc[SS_PART]);
-	seen_report( cmdparams, "%d Channel Kicks", sc[SS_KICKED]);
+	seen_report( cmdparams, "Seen Statistics (Current Records Per Type)" );
+	seen_report( cmdparams, "%d Connections", sc[SS_CONNECTED] );
+	seen_report( cmdparams, "%d Quits", sc[SS_QUIT] );
+	seen_report( cmdparams, "%d Kills", sc[SS_KILLED] );
+	seen_report( cmdparams, "%d Nick Changes", sc[SS_NICKCHANGE] );
+	seen_report( cmdparams, "%d Channel Joins", sc[SS_JOIN] );
+	seen_report( cmdparams, "%d Channel Parts", sc[SS_PART] );
+	seen_report( cmdparams, "%d Channel Kicks", sc[SS_KICKED] );
 	seen_report( cmdparams, "End Of Statistics");
 	return NS_SUCCESS;
 }
