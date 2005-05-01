@@ -212,7 +212,7 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 	cc[0] = '\0';
 	h = m = s = sef = 0;
 	if (checktype == SS_CHECK_WILDCARD) {
-		if (!strchr(cmdparams->av[0], '*') == NULL) {
+		if (! ( strchr( cmdparams->av[0], '*' ) == NULL ) ) {
 			ircsnprintf(matchstr, USERHOSTLEN, "%s", cmdparams->av[0]);
 		} else {
 			ircsnprintf(matchstr, USERHOSTLEN, "*%s*", cmdparams->av[0]);
