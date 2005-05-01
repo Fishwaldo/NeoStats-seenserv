@@ -229,11 +229,7 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 	if (ValidateNick(cmdparams->av[0]) == NS_SUCCESS) {
 		u = FindUser(cmdparams->av[0]);
 		if (u) {
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->hostname);
-			} else {
-				seen_report( cmdparams, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
-			}
+			seen_report( cmdparams, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
 			return NS_SUCCESS;
 		}
 	}
@@ -291,30 +287,26 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 		d = (me.now - sdo->seentime);
 		if (d > 0) {
 			s = (d % 60);
-			if (s) {
-				ircsnprintf(ttxt[3], 12, "%d Seconds", s);
-				d -= s;
-			}
+			d -= s;
 			d = (d / 60);
 			m = (d % 60);
-			if (m) {
-				ircsnprintf(ttxt[2], 12, "%d Minutes ", m);
-				d -= m;
-			}
+			d -= m;
 			d = (d / 60);
 			h = (d % 24);
-			if (h) {
-				ircsnprintf(ttxt[1], 12, "%d Hours ", h);
-				d -= h;
-			}
+			d -= h;
 			d = (d / 24);
-			if (d) {
+			if (d)
 				ircsnprintf(ttxt[0], 12, "%d Days ", d);
-			}
+			if (h)
+				ircsnprintf(ttxt[1], 12, "%d Hours ", h);
+			if (m)
+				ircsnprintf(ttxt[2], 12, "%d Minutes ", m);
+			if (s)
+				ircsnprintf(ttxt[3], 12, "%d Seconds", s);
+			ircsnprintf(dt, SS_GENCHARLEN, "%s%s%s%s", ttxt[0], ttxt[1], ttxt[2], ttxt[3]);
 		} else {
-			ircsnprintf(ttxt[3], 12, "0 Seconds");
+			ircsnprintf(dt, SS_GENCHARLEN, "0 Seconds");
 		}
-		ircsnprintf(dt, SS_GENCHARLEN, "%s%s%s%s", ttxt[0], ttxt[1], ttxt[2], ttxt[3]);
 		if (checktype == SS_CHECK_NICK || sef == 1) {
 			nickstr[0] = '\0';
 		} else if (checktype == SS_CHECK_WILDCARD) {
@@ -327,23 +319,11 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 					ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 				}
 			}
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->userhost, dt, cc);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen connecting %s ago%s", nickstr, sdo->nick, dt, cc );
-			}
+			seen_report( cmdparams, "%s%s was last seen connecting %s ago%s", nickstr, sdo->nick, dt, cc );
 		} else if ( sdo->seentype == SS_QUIT ) {
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->userhost, dt, sdo->message);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->uservhost, dt, sdo->message);
-			}
+			seen_report( cmdparams, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->uservhost, dt, sdo->message);
 		} else if ( sdo->seentype == SS_KILLED ) {
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being killed %s ago %s", nickstr, sdo->userhost, dt, sdo->message);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen being killed %s ago %s", nickstr, sdo->uservhost, dt, sdo->message );
-			}
+			seen_report( cmdparams, "%s%s was last seen being killed %s ago %s", nickstr, sdo->uservhost, dt, sdo->message );
 		} else if ( sdo->seentype == SS_NICKCHANGE ) {
 			u = FindUser(sdo->message);
 			if (u) {
@@ -351,11 +331,7 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 					ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 				}
 			}
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->userhost, dt, sdo->message, cc);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->uservhost, dt, sdo->message, cc );
-			}
+			seen_report( cmdparams, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->uservhost, dt, sdo->message, cc );
 		} else if ( sdo->seentype == SS_JOIN ) {
 			u = FindUser(sdo->nick);
 			if (u) {
@@ -368,23 +344,11 @@ int CheckSeenData(CmdParams *cmdparams, int checktype) {
 					}
 				}
 			}
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->userhost, sdo->message, dt, cc);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->uservhost, sdo->message, dt, cc );
-			}
+			seen_report( cmdparams, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->uservhost, sdo->message, dt, cc );
 		} else if ( sdo->seentype == SS_PART ) {
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Parting %s %s ago", nickstr, sdo->userhost, sdo->message, dt);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen Parting %s %s ago", nickstr, sdo->uservhost, sdo->message, dt );
-			}
+			seen_report( cmdparams, "%s%s was last seen Parting %s %s ago", nickstr, sdo->uservhost, sdo->message, dt );
 		} else if ( sdo->seentype == SS_KICKED ) {
-			if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL) {
-				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being Kicked From %s %s ago", nickstr, sdo->userhost, sdo->message, dt);
-			} else {
-				seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", nickstr, sdo->uservhost, sdo->message, dt);
-			}
+			seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", nickstr, sdo->uservhost, sdo->message, dt);
 		}
 		ns_free(sdo);
 		return NS_SUCCESS;
@@ -433,7 +397,8 @@ int sns_cmd_del(CmdParams *cmdparams) {
 /*
  * Display Seen Statistics
 */
-int sns_cmd_status(CmdParams *cmdparams) {
+int sns_cmd_status(CmdParams *cmdparams)
+{
 	lnode_t *ln;
 	SeenData *sd;
 	int sc[10], i;
