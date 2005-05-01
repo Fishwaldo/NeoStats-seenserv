@@ -45,7 +45,7 @@ static bot_cmd sns_commands[]=
 	{"SEEN",	sns_cmd_seenhost,	1,	0,			sns_help_seen,		sns_help_seen_oneline},
 	{"SEENNICK",	sns_cmd_seennick,	1,	0,			sns_help_seennick,	sns_help_seennick_oneline},
 	{"DEL",		sns_cmd_del,		1,	NS_ULEVEL_ADMIN,	sns_help_del,		sns_help_del_oneline},
-	{"STATS",	sns_cmd_stats,		0,	NS_ULEVEL_LOCOPER,	sns_help_stats,		sns_help_stats_oneline},
+	{"STATS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status,		sns_help_status_oneline},
 	{NULL,		NULL,			0, 	0,			NULL,			NULL}
 };
 

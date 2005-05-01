@@ -82,11 +82,11 @@ extern const char *sns_help_set_expiretime[];
 extern const char sns_help_seen_oneline[];
 extern const char sns_help_seennick_oneline[];
 extern const char sns_help_del_oneline[];
-extern const char sns_help_stats_oneline[];
+extern const char sns_help_status_oneline[];
 extern const char *sns_help_seen[];
 extern const char *sns_help_seennick[];
 extern const char *sns_help_del[];
-extern const char *sns_help_stats[];
+extern const char *sns_help_status[];
 
 /* events.c */
 int SeenSignon (CmdParams *cmdparams);
@@ -113,13 +113,11 @@ static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
 /* seen.c */
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);
 void checkseenlistlimit(void);
-void removepreviousnick(char *nn);
 void loadseendata(void);
-int loadseenrecords(void *data, int size);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
 int sns_cmd_seenhost(CmdParams *cmdparams);
 int sns_cmd_seennick(CmdParams *cmdparams);
 int CheckSeenData(CmdParams *cmdparams, int checktype);
 int sns_cmd_del(CmdParams *cmdparams);
-int sns_cmd_stats(CmdParams *cmdparams);
+int sns_cmd_status(CmdParams *cmdparams);

@@ -32,10 +32,46 @@ static char cc[SS_GENCHARLEN];
 static char senf[5][MAXNICK+3];
 static char nickstr[SS_MESSAGESIZE];
 
+/** @brief findnick
+ *
+ *  list sorting helper
+ *
+ *  @param key1
+ *  @param key2
+ *
+ *  @return results of strcmp
+ */
+
+int findnick( const void *key1, const void *key2 )
+{
+	const SeenData *sd = key1;
+	return( ircstrcasecmp( sd->nick,( char * )key2 ) );
+}
+
+/*
+ *  Removes SeenData for nickname if exists
+*/
+void removepreviousnick(char *nn)
+{
+	lnode_t *ln;
+	SeenData *sd;
+
+	ln = lnode_find( seenlist, nn, findnick );
+	if( ln )
+	{
+		sd = lnode_get(ln);
+		DBADelete( "seendata", sd->nick);
+		ns_free(sd);
+		list_delete(seenlist, ln);
+		lnode_destroy(ln);
+	}
+}
+
 /*
  *  add new seen entry to list
 */
-void addseenentry(char *nick, char *host, char *vhost, char *message, int type) {
+void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
+{
 	SeenData *sd;
 	
 	removepreviousnick(nick);
@@ -78,35 +114,8 @@ void checkseenlistlimit(void)
 }
 
 /*
- *  Removes SeenData for nickname if exists
-*/
-void removepreviousnick(char *nn) {
-	lnode_t *ln;
-	SeenData *sd;
-
-	ln = list_first(seenlist);
-	while (ln != NULL) {
-		sd = lnode_get(ln);
-		if (!ircstrcasecmp(sd->nick, nn)) {
-			DBADelete( "seendata", sd->nick);
-			ns_free(sd);
-			list_delete(seenlist, ln);
-			lnode_destroy(ln);
-			break;
-		} else {
-			ln = list_next(seenlist, ln);
-		}
-	}
-}
-
-/*
  * Load Saved Seen Records
 */
-void loadseendata(void) {
-	seenlist = list_create( -1 );
-	DBAFetchRows( "seendata", loadseenrecords );
-	list_sort( seenlist, sortlistbytime );
-}
 int loadseenrecords(void *data, int size)
 {
 	SeenData *sd;
@@ -116,6 +125,14 @@ int loadseenrecords(void *data, int size)
 	lnode_create_append( seenlist, sd );
 	return NS_FALSE;
 }
+
+void loadseendata(void)
+{
+	seenlist = list_create( -1 );
+	DBAFetchRows( "seendata", loadseenrecords );
+	list_sort( seenlist, sortlistbytime );
+}
+
 int sortlistbytime( const void *key1, const void *key2 )
 {
 	const SeenData *sd1 = key1;
@@ -126,8 +143,9 @@ int sortlistbytime( const void *key1, const void *key2 )
 /*
  * Destroy Seen List
 */
-void destroyseenlist(void) {
-	lnode_t *ln;
+void destroyseenlist(void)
+{
+	lnode_t *ln, *ln2;
 	SeenData *sd;
 
 	/*
@@ -137,12 +155,15 @@ void destroyseenlist(void) {
 	 * so loop through and make sure memory is free.
 	 * since it uses lots of memory for big lists.
 	*/
-	while (list_count(seenlist) > 0) {
-		ln = list_first(seenlist);
+	ln = list_first(seenlist);
+	while( ln )
+	{
 		sd = lnode_get(ln);
+		ln2 = list_next( seenlist, ln );
 		ns_free(sd);
 		list_delete(seenlist, ln);
 		lnode_destroy(ln);
+		ln = ln2;
 	}
 	list_destroy_auto(seenlist);
 }
@@ -440,7 +461,7 @@ int sns_cmd_del(CmdParams *cmdparams) {
 /*
  * Display Seen Statistics
 */
-int sns_cmd_stats(CmdParams *cmdparams) {
+int sns_cmd_status(CmdParams *cmdparams) {
 	lnode_t *ln;
 	SeenData *sd;
 	int sc[10], i;
