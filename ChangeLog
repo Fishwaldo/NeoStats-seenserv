@@ -2,6 +2,7 @@ SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
 3.0.a3-dev
+ - Add seen_report helper function to manage messaging. (M)
  - Renamed STATS command to STATUS to match other modules. (M)
  - Optimise limit and expiry checks. (M)
  - Add EXPIRETIME setting, to expire records after # days (D)
