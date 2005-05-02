@@ -211,7 +211,7 @@ void seen_report( CmdParams *cmdparams, const char *fmt, ... )
 /*
  * Check For Seen Records
 */
-int CheckSeenData(CmdParams *cmdparams, int checktype)
+int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 {
 	lnode_t *ln;
 	SeenData *sd;
@@ -320,13 +320,22 @@ int CheckSeenData(CmdParams *cmdparams, int checktype)
 						ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 					}
 				}
-				seen_report( cmdparams, "%s%s was last seen connecting %s ago%s", nickstr, sdo->nick, dt, cc );
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", nickstr, sdo->userhost, dt, cc);
+				else
+					seen_report( cmdparams, "%s%s was last seen connecting %s ago%s", nickstr, sdo->nick, dt, cc );
 				break;
 			case SS_QUIT:
-				seen_report( cmdparams, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->uservhost, dt, sdo->message);
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->userhost, dt, sdo->message);
+				else
+					seen_report( cmdparams, "%s%s was last seen quiting %s ago, stating %s", nickstr, sdo->uservhost, dt, sdo->message);
 				break;
 			case SS_KILLED:
-				seen_report( cmdparams, "%s%s was last seen being killed %s ago %s", nickstr, sdo->uservhost, dt, sdo->message );
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being killed %s ago %s", nickstr, sdo->userhost, dt, sdo->message);
+				else
+					seen_report( cmdparams, "%s%s was last seen being killed %s ago %s", nickstr, sdo->uservhost, dt, sdo->message );
 				break;
 			case SS_NICKCHANGE:
 				u = FindUser(sdo->message);
@@ -335,7 +344,10 @@ int CheckSeenData(CmdParams *cmdparams, int checktype)
 						ircsnprintf(cc, SS_GENCHARLEN, ", %s is currently connected", u->name);
 					}
 				}
-				seen_report( cmdparams, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->uservhost, dt, sdo->message, cc );
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->userhost, dt, sdo->message, cc);
+				else
+					seen_report( cmdparams, "%s%s was last seen changing Nickname %s ago to %s%s", nickstr, sdo->uservhost, dt, sdo->message, cc );
 				break;
 			case SS_JOIN:
 				u = FindUser(sdo->nick);
@@ -349,13 +361,22 @@ int CheckSeenData(CmdParams *cmdparams, int checktype)
 						}
 					}
 				}
-				seen_report( cmdparams, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->uservhost, sdo->message, dt, cc );
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->userhost, sdo->message, dt, cc);
+				else
+					seen_report( cmdparams, "%s%s was last seen Joining %s %s ago%s", nickstr, sdo->uservhost, sdo->message, dt, cc );
 				break;
 			case SS_PART:
-				seen_report( cmdparams, "%s%s was last seen Parting %s %s ago", nickstr, sdo->uservhost, sdo->message, dt );
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Parting %s %s ago", nickstr, sdo->userhost, sdo->message, dt);
+				else
+					seen_report( cmdparams, "%s%s was last seen Parting %s %s ago", nickstr, sdo->uservhost, sdo->message, dt );
 				break;
 			case SS_KICKED:
-				seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", nickstr, sdo->uservhost, sdo->message, dt);
+				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
+					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being Kicked From %s %s ago", nickstr, sdo->userhost, sdo->message, dt);
+				else
+					seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", nickstr, sdo->uservhost, sdo->message, dt);
 				break;
 		}
 		ns_free(sdo);
@@ -406,30 +427,28 @@ int sns_cmd_del(CmdParams *cmdparams) {
 */
 int sns_cmd_status(CmdParams *cmdparams)
 {
+	int seenstats[SEEN_TYPE_MAX];
 	lnode_t *ln;
 	SeenData *sd;
-	int sc[10], i;
 
 	if ( SeenServ.verbose == 1 ) {
 		irc_chanalert (sns_bot, "Stats Command used by %s (STATS)", cmdparams->source->name);
 	}
-	for ( i = 0 ; i < 10 ; i++ ) {
-		sc[i] = 0;
-	}
+	os_memset( seenstats, 0, sizeof( seenstats ) );
 	ln = list_first(seenlist);
 	while (ln != NULL) {
 		sd = lnode_get(ln);
-		sc[sd->seentype]++;
+		seenstats[ sd->seentype ]++;
 		ln = list_next(seenlist, ln);
 	}
 	seen_report( cmdparams, "Seen Statistics (Current Records Per Type)" );
-	seen_report( cmdparams, "%d Connections", sc[SS_CONNECTED] );
-	seen_report( cmdparams, "%d Quits", sc[SS_QUIT] );
-	seen_report( cmdparams, "%d Kills", sc[SS_KILLED] );
-	seen_report( cmdparams, "%d Nick Changes", sc[SS_NICKCHANGE] );
-	seen_report( cmdparams, "%d Channel Joins", sc[SS_JOIN] );
-	seen_report( cmdparams, "%d Channel Parts", sc[SS_PART] );
-	seen_report( cmdparams, "%d Channel Kicks", sc[SS_KICKED] );
+	seen_report( cmdparams, "%d Connections", seenstats[SS_CONNECTED] );
+	seen_report( cmdparams, "%d Quits", seenstats[SS_QUIT] );
+	seen_report( cmdparams, "%d Kills", seenstats[SS_KILLED] );
+	seen_report( cmdparams, "%d Nick Changes", seenstats[SS_NICKCHANGE] );
+	seen_report( cmdparams, "%d Channel Joins", seenstats[SS_JOIN] );
+	seen_report( cmdparams, "%d Channel Parts", seenstats[SS_PART] );
+	seen_report( cmdparams, "%d Channel Kicks", seenstats[SS_KICKED] );
 	seen_report( cmdparams, "End Of Statistics");
 	return NS_SUCCESS;
 }

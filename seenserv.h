@@ -21,16 +21,24 @@
 */
 
 /* Defines */
-#define SS_CHECK_WILDCARD	0x00000001	/* WildCard Entry Check */
-#define SS_CHECK_NICK		0x00000002	/* Nick Entry Check */
+typedef enum SEEN_CHECK
+{
+	SS_CHECK_WILDCARD,	/* WildCard Entry Check */
+	SS_CHECK_NICK,		/* Nick Entry Check */
+	SEEN_CHECK_TYPE_MAX,
+} SEEN_CHECK;
 
-#define SS_CONNECTED		0x00000001	/* Seen Connection Type */
-#define SS_QUIT			0x00000002	/* Seen Quit Type */
-#define SS_KILLED		0x00000003	/* Seen Killed Type */
-#define SS_NICKCHANGE		0x00000004	/* Seen Nick Change Type */
-#define SS_JOIN			0x00000005	/* Seen Join Channel Type */
-#define SS_PART			0x00000006	/* Seen Part Channel Type */
-#define SS_KICKED		0x00000007	/* Seen Kicked Channel Type */
+typedef enum SEEN_TYPE
+{
+	SS_CONNECTED,	/* Seen Connection Type */
+	SS_QUIT,		/* Seen Quit Type */
+	SS_KILLED,		/* Seen Killed Type */
+	SS_NICKCHANGE,	/* Seen Nick Change Type */
+	SS_JOIN,		/* Seen Join Channel Type */
+	SS_PART,		/* Seen Part Channel Type */
+	SS_KICKED,		/* Seen Kicked Channel Type */
+	SEEN_TYPE_MAX,
+} SEEN_TYPE;
 
 #define SS_MESSAGESIZE		300 /* Message Field Size */
 #define SS_GENCHARLEN		128 /* General Character Field Length */
@@ -60,7 +68,7 @@ typedef struct SeenData {
 	char userhost[USERHOSTLEN];
 	char uservhost[USERHOSTLEN];
 	char message[SS_MESSAGESIZE];
-	int seentype;
+	SEEN_TYPE seentype;
 	time_t seentime;
 } SeenData;
 
@@ -118,6 +126,6 @@ int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
 int sns_cmd_seenhost(CmdParams *cmdparams);
 int sns_cmd_seennick(CmdParams *cmdparams);
-int CheckSeenData(CmdParams *cmdparams, int checktype);
+int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype);
 int sns_cmd_del(CmdParams *cmdparams);
 int sns_cmd_status(CmdParams *cmdparams);
