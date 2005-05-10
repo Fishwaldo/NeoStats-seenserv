@@ -58,12 +58,6 @@ const char *sns_help_set_maxentries[] = {
 	NULL
 };
 
-const char *sns_help_set_verbose[] = {
-	"\2VERBOSE <ON|OFF>\2",
-	"Enable verbose mode.",
-	NULL
-};
-
 const char *sns_help_set_eventsignon[] = {
 	"\2EVENTSIGNON <ON|OFF>\2",
 	"Enable Connection Event Recording.",

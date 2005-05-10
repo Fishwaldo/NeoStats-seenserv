@@ -30,24 +30,23 @@ typedef enum SEEN_CHECK
 
 typedef enum SEEN_TYPE
 {
-	SS_CONNECTED,	/* Seen Connection Type */
+	SS_CONNECTED,		/* Seen Connection Type */
 	SS_QUIT,		/* Seen Quit Type */
 	SS_KILLED,		/* Seen Killed Type */
-	SS_NICKCHANGE,	/* Seen Nick Change Type */
+	SS_NICKCHANGE,		/* Seen Nick Change Type */
 	SS_JOIN,		/* Seen Join Channel Type */
 	SS_PART,		/* Seen Part Channel Type */
 	SS_KICKED,		/* Seen Kicked Channel Type */
 	SEEN_TYPE_MAX,
 } SEEN_TYPE;
 
-#define SS_MESSAGESIZE		300 /* Message Field Size */
-#define SS_GENCHARLEN		128 /* General Character Field Length */
+#define SS_MESSAGESIZE	300	/* Message Field Size */
+#define SS_GENCHARLEN	128	/* General Character Field Length */
 
 /* Variables And Structs */
 Bot *sns_bot;
 
 struct SeenServ {
-	int verbose;
 	int exclusions;
 	int enable;
 	int enableseenchan;
@@ -78,7 +77,6 @@ extern const char *sns_help_set_enable[];
 extern const char *sns_help_set_enableseenchan[];
 extern const char *sns_help_set_seenchan[];
 extern const char *sns_help_set_maxentries[];
-extern const char *sns_help_set_verbose[];
 extern const char *sns_help_set_eventsignon[];
 extern const char *sns_help_set_eventquit[];
 extern const char *sns_help_set_eventkill[];
@@ -106,6 +104,7 @@ int SeenPartChan (CmdParams *cmdparams);
 int SeenKicked (CmdParams *cmdparams);
 
 /* seenserv.c */
+static int sns_set_enablechan (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_exclusions (CmdParams *cmdparams, SET_REASON reason);

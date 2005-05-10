@@ -29,13 +29,12 @@ static char tmpmsg2[SS_MESSAGESIZE];
 /*
  * Signon Events
 */
-int SeenSignon (CmdParams *cmdparams) {
-	if (ModIsUserExcluded(cmdparams->source)) {
+int SeenSignon (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (ModIsUserExcluded(cmdparams->source))
 		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Signon Event (%s)", cmdparams->source->name);
-	}
+	dlog( DEBUG10, "Recording Signon Event (%s)", cmdparams->source->name);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, NULL, SS_CONNECTED);
 	return NS_SUCCESS;
 }
@@ -43,13 +42,12 @@ int SeenSignon (CmdParams *cmdparams) {
 /*
  * Quit Events
 */
-int SeenQuit (CmdParams *cmdparams) {
-	if (ModIsUserExcluded(cmdparams->source)) {
+int SeenQuit (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (ModIsUserExcluded(cmdparams->source))
 		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Quit Event (%s (%s))", cmdparams->source->user->uservhostmask, cmdparams->param);
-	}
+	dlog( DEBUG10, "Recording Quit Event (%s (%s))", cmdparams->source->user->uservhostmask, cmdparams->param);
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "(%s)", cmdparams->param);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_QUIT);
 	return NS_SUCCESS;
@@ -58,13 +56,12 @@ int SeenQuit (CmdParams *cmdparams) {
 /*
  * Kill Events
 */
-int SeenKill (CmdParams *cmdparams) {
-	if (ModIsUserExcluded(cmdparams->target)) {
+int SeenKill (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (ModIsUserExcluded(cmdparams->target))
 		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Kill Event (%s by %s (%s))", cmdparams->target->user->uservhostmask, cmdparams->source->name, cmdparams->param);
-	}
+	dlog( DEBUG10, "Recording Kill Event (%s by %s (%s))", cmdparams->target->user->uservhostmask, cmdparams->source->name, cmdparams->param);
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "by %s (%s)", cmdparams->source->name, cmdparams->param);
 	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KILLED);
 	return NS_SUCCESS;
@@ -73,13 +70,12 @@ int SeenKill (CmdParams *cmdparams) {
 /*
  * Nick Events
 */
-int SeenNickChange (CmdParams *cmdparams) {
-	if (ModIsUserExcluded(cmdparams->source)) {
+int SeenNickChange (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (ModIsUserExcluded(cmdparams->source))
 		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Nick Change Event (%s to %s)", cmdparams->param, cmdparams->source->user->uservhostmask);
-	}
+	dlog( DEBUG10, "Recording Nick Change Event (%s to %s)", cmdparams->param, cmdparams->source->user->uservhostmask);
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s!%s@%s", cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->hostname);
 	ircsnprintf(tmpmsg2, SS_MESSAGESIZE, "%s!%s@%s", cmdparams->param, cmdparams->source->user->username, cmdparams->source->user->vhost);
 	addseenentry(cmdparams->param, tmpmsg, tmpmsg2, cmdparams->source->name, SS_NICKCHANGE);
@@ -89,19 +85,12 @@ int SeenNickChange (CmdParams *cmdparams) {
 /*
  * Join Events
 */
-int SeenJoinChan (CmdParams *cmdparams) {
-	if (is_hidden_chan(cmdparams->channel)) {
+int SeenJoinChan (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (is_hidden_chan(cmdparams->channel) || ModIsUserExcluded(cmdparams->source) || ModIsChannelExcluded(cmdparams->channel))
 		return NS_SUCCESS;
-	}
-	if (ModIsUserExcluded(cmdparams->source)) {
-		return NS_SUCCESS;
-	}
-	if (ModIsChannelExcluded(cmdparams->channel)) {
-		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Join Event (%s %s)", cmdparams->source->user->uservhostmask, cmdparams->channel->name);
-	}
+	dlog( DEBUG10, "Recording Join Event (%s %s)", cmdparams->source->user->uservhostmask, cmdparams->channel->name);
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, cmdparams->channel->name, SS_JOIN);
 	return NS_SUCCESS;
 }
@@ -109,19 +98,12 @@ int SeenJoinChan (CmdParams *cmdparams) {
 /*
  * Part Events
 */
-int SeenPartChan (CmdParams *cmdparams) {
-	if (is_hidden_chan(cmdparams->channel)) {
+int SeenPartChan (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (is_hidden_chan(cmdparams->channel) || ModIsUserExcluded(cmdparams->source) || ModIsChannelExcluded(cmdparams->channel))
 		return NS_SUCCESS;
-	}
-	if (ModIsUserExcluded(cmdparams->source)) {
-		return NS_SUCCESS;
-	}
-	if (ModIsChannelExcluded(cmdparams->channel)) {
-		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Part Event (%s %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->channel->name, cmdparams->param ? cmdparams->param : "");
-	}
+	dlog( DEBUG10, "Recording Part Event (%s %s (%s))", cmdparams->source->user->uservhostmask, cmdparams->channel->name, cmdparams->param ? cmdparams->param : "");
 	if (cmdparams->param) {
 		ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s (%s)", cmdparams->channel->name, cmdparams->param);
 	} else {
@@ -134,19 +116,12 @@ int SeenPartChan (CmdParams *cmdparams) {
 /*
  * Kick Events
 */
-int SeenKicked (CmdParams *cmdparams) {
-	if (is_hidden_chan(cmdparams->channel)) {
+int SeenKicked (CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if (is_hidden_chan(cmdparams->channel) || ModIsUserExcluded(cmdparams->target) || ModIsChannelExcluded(cmdparams->channel))
 		return NS_SUCCESS;
-	}
-	if (ModIsUserExcluded(cmdparams->target)) {
-		return NS_SUCCESS;
-	}
-	if (ModIsChannelExcluded(cmdparams->channel)) {
-		return NS_SUCCESS;
-	}
-	if ( SeenServ.verbose == 1 ) {
-		irc_chanalert (sns_bot, "Recording Kick Event (%s by %s from %s (%s))", cmdparams->target->user->uservhostmask, cmdparams->source->name, cmdparams->channel->name, cmdparams->param);
-	}
+	dlog( DEBUG10, "Recording Kick Event (%s by %s from %s (%s))", cmdparams->target->user->uservhostmask, cmdparams->source->name, cmdparams->channel->name, cmdparams->param);
 	ircsnprintf(tmpmsg, SS_MESSAGESIZE, "%s by %s (%s)", cmdparams->channel->name, cmdparams->source->name, cmdparams->param);
 	addseenentry(cmdparams->target->name, cmdparams->target->user->userhostmask, cmdparams->target->user->uservhostmask, tmpmsg, SS_KICKED);
 	return NS_SUCCESS;

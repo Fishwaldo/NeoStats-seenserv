@@ -45,16 +45,15 @@ static bot_cmd sns_commands[]=
 	{"SEEN",	sns_cmd_seenhost,	1,	0,			sns_help_seen,		sns_help_seen_oneline},
 	{"SEENNICK",	sns_cmd_seennick,	1,	0,			sns_help_seennick,	sns_help_seennick_oneline},
 	{"DEL",		sns_cmd_del,		1,	NS_ULEVEL_ADMIN,	sns_help_del,		sns_help_del_oneline},
-	{"STATS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status,		sns_help_status_oneline},
+	{"STATUS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status,	sns_help_status_oneline},
 	{NULL,		NULL,			0, 	0,			NULL,			NULL}
 };
 
 static bot_setting sns_settings[]=
 {
-	{"VERBOSE",		&SeenServ.verbose,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_verbose,		NULL,			(void *)0 },
 	{"EXCLUSIONS",		&SeenServ.exclusions,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_exclusions,	sns_set_exclusions,	(void *)1 },
 	{"ENABLE",		&SeenServ.enable,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_enable,		NULL,			(void *)0 },
-	{"ENABLESEENCHAN",	&SeenServ.enableseenchan,	SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_enableseenchan,	NULL,			(void *)0 },
+	{"ENABLESEENCHAN",	&SeenServ.enableseenchan,	SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_enableseenchan,	sns_set_enablechan,	(void *)0 },
 	{"SEENCHANNAME",	&SeenServ.seenchan,		SET_TYPE_CHANNEL,	0,	MAXCHANLEN,	NS_ULEVEL_ADMIN,	NULL,	sns_help_set_seenchan,		sns_set_seenchan,	(void *)"#Seen" },
 	{"MAXENTRIES",		&SeenServ.maxentries,		SET_TYPE_INT,		100,	100000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_maxentries,	sns_set_maxentries,	(void *)2000 },
 	{"EVENTSIGNON",		&SeenServ.eventsignon,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventsignon,	sns_set_eventsignon,	(void *)1 },
@@ -93,8 +92,8 @@ ModuleEvent module_events[] = {
 	{EVENT_QUIT,		SeenQuit,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_KILL,		SeenKill,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_LOCALKILL,	SeenKill,		EVENT_FLAG_EXCLUDE_ME},
-	{EVENT_GLOBALKILL,	SeenKill,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_SERVERKILL,	SeenKill,		EVENT_FLAG_EXCLUDE_ME},
+	{EVENT_GLOBALKILL,	SeenKill,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_NICK,		SeenNickChange,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_JOIN,		SeenJoinChan,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_PART,		SeenPartChan,		EVENT_FLAG_EXCLUDE_ME},
@@ -122,9 +121,8 @@ int ModSynch (void)
 {
 	/* Introduce a bot onto the network */
 	sns_bot = AddBot (&sns_botinfo);	
-	if (!sns_bot) {
+	if (!sns_bot)
 		return NS_FAILURE;
-	}
 	if (SeenServ.enableseenchan) {
 		irc_join (sns_bot, SeenServ.seenchan, "+o");
 		irc_chanalert (sns_bot, "Seen Channel Now Available in %s", SeenServ.seenchan);
@@ -154,20 +152,45 @@ int ModFini( void )
 }
 
 /*
+ * Seen Channel Enable/Disable
+*/
+static int sns_set_enablechan (CmdParams *cmdparams, SET_REASON reason) 
+{
+	if (!SeenServ.seenchan)
+		return NS_SUCCESS;
+	if (reason == SET_CHANGE) 
+	{
+		if (SeenServ.enableseenchan) 
+		{
+			irc_join (sns_bot, SeenServ.seenchan, "+o");
+			irc_chanalert (sns_bot, "Seen functions now available in %s", SeenServ.seenchan);
+			return NS_SUCCESS;
+		} else {
+			irc_part (sns_bot, SeenServ.seenchan, NULL);
+			irc_chanalert (sns_bot, "Seen functions are no longer available in %s", SeenServ.seenchan);
+			return NS_SUCCESS;
+		}
+	}
+	return NS_SUCCESS;
+}
+
+/*
  * Seen Channel Setting
 */
-static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason) {
-	if (!SeenServ.enableseenchan) {
+static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason) 
+{
+	if (!SeenServ.enableseenchan)
 		return NS_SUCCESS;
-	}
-	if (reason == SET_VALIDATE) {
+	if (reason == SET_VALIDATE) 
+	{
 		irc_prefmsg (sns_bot, cmdparams->source, "Seen Channel changing from %s to %s", SeenServ.seenchan, cmdparams->av[1]);
 		irc_chanalert (sns_bot, "Seen Channel Changing to %s , Parting %s (%s)", cmdparams->av[1], SeenServ.seenchan, cmdparams->source->name);
 		irc_chanprivmsg (sns_bot, SeenServ.seenchan, "\0039%s has changed Channels, Seen functions will now be available in %s", cmdparams->source->name, cmdparams->av[1]);
 		irc_part (sns_bot, SeenServ.seenchan, NULL);
 		return NS_SUCCESS;
 	}
-	if (reason == SET_CHANGE) {
+	if (reason == SET_CHANGE) 
+	{
 		irc_join (sns_bot, SeenServ.seenchan, "+o");
 		irc_chanalert (sns_bot, "Seen functions now available in %s", SeenServ.seenchan);
 		return NS_SUCCESS;
@@ -178,8 +201,10 @@ static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason) {
 /*
  * Change Max Entries Saved
 */
-static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason) {
-	if (reason == SET_CHANGE) {
+static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason) 
+{
+	if (reason == SET_CHANGE) 
+	{
 		checkseenlistlimit();
 		return NS_SUCCESS;
 	}
@@ -192,9 +217,7 @@ static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason) {
 static int sns_set_exclusions( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
-	{
 		SetAllEventFlags( EVENT_FLAG_USE_EXCLUDE, SeenServ.exclusions );
-	}
 	return NS_SUCCESS;
 }
 
@@ -205,13 +228,10 @@ static int sns_set_eventsignon( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventsignon) {
+		if (SeenServ.eventsignon)
 			EnableEvent(EVENT_SIGNON);
-			EnableEvent(EVENT_NICKIP);
-		} else {
+		else
 			DisableEvent(EVENT_SIGNON);
-			DisableEvent(EVENT_NICKIP);
-		}
 	}
 	return NS_SUCCESS;
 }
@@ -220,11 +240,10 @@ static int sns_set_eventquit( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventquit) {
+		if (SeenServ.eventquit)
 			EnableEvent(EVENT_QUIT);
-		} else {
+		else
 			DisableEvent(EVENT_QUIT);
-		}
 	}
 	return NS_SUCCESS;
 }
@@ -233,7 +252,8 @@ static int sns_set_eventkill( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventkill) {
+		if (SeenServ.eventkill) 
+		{
 			EnableEvent(EVENT_KILL);
 			EnableEvent(EVENT_LOCALKILL);
 			EnableEvent(EVENT_GLOBALKILL);
@@ -252,11 +272,10 @@ static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventnick) {
+		if (SeenServ.eventnick)
 			EnableEvent(EVENT_NICK);
-		} else {
+		else
 			DisableEvent(EVENT_NICK);
-		}
 	}
 	return NS_SUCCESS;
 }
@@ -265,11 +284,10 @@ static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventjoin) {
+		if (SeenServ.eventjoin)
 			EnableEvent(EVENT_JOIN);
-		} else {
+		else
 			DisableEvent(EVENT_JOIN);
-		}
 	}
 	return NS_SUCCESS;
 }
@@ -278,11 +296,10 @@ static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventpart) {
+		if (SeenServ.eventpart)
 			EnableEvent(EVENT_PART);
-		} else {
+		else
 			DisableEvent(EVENT_PART);
-		}
 	}
 	return NS_SUCCESS;
 }
@@ -291,11 +308,10 @@ static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
-		if (SeenServ.eventkick) {
+		if (SeenServ.eventkick)
 			EnableEvent(EVENT_KICK);
-		} else {
+		else
 			DisableEvent(EVENT_KICK);
-		}
 	}
 	return NS_SUCCESS;
 }
@@ -303,11 +319,12 @@ static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason )
 /*
  * Check Entry Saved Time
 */
-static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason) {
-	if (reason == SET_CHANGE && SeenServ.expiretime > 0) {
+static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason) 
+{
+	if (reason == SET_CHANGE && SeenServ.expiretime > 0) 
+	{
 		checkseenlistlimit();
 		return NS_SUCCESS;
 	}
 	return NS_SUCCESS;
 }
-
