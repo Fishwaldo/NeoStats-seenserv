@@ -121,7 +121,7 @@ void checkseenlistlimit(void)
 	SeenData *sd;
 
 	currentlistcount = list_count(seenlist);
-	maxageallowed = me.now - ( SeenServ.expiretime * 86400 );
+	maxageallowed = me.now - ( SeenServ.expiretime * TS_ONE_DAY );
 	ln = list_first( seenlist );
 	sd = lnode_get( ln );
 	while( ( currentlistcount > SeenServ.maxentries ) || ( SeenServ.expiretime > 0 && ( maxageallowed > sd->seentime ) ) )
