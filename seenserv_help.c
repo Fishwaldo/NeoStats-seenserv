@@ -107,12 +107,8 @@ const char *sns_help_set_expiretime[] = {
 	NULL
 };
 
-const char sns_help_seen_oneline[] = "Displays Last Seen Nicks";
-const char sns_help_seennick_oneline[] = "Displays Last Seen Nicks";
-const char sns_help_del_oneline[] = "Deletes Seen Entries that match nick!user@host";
-const char sns_help_status_oneline[] = "Displays Seen Statistics";
-
 const char *sns_help_seen[] = {
+	"Displays Last Seen Nicks",
 	"Syntax: \2SEEN <host>\2",
 	"",
 	"Displays the last seen entry of the matching entry.",
@@ -120,6 +116,7 @@ const char *sns_help_seen[] = {
 };
 
 const char *sns_help_seennick[] = {
+	"Displays Last Seen Nicks",
 	"Syntax: \2SEEN <nick>\2",
 	"",
 	"Displays the last seen entry of the matching nick.",
@@ -127,6 +124,7 @@ const char *sns_help_seennick[] = {
 };
 
 const char *sns_help_del[] = {
+	"Deletes Seen Entries that match nick!user@host",
 	"Syntax: \2DEL <hostmask>\2",
 	"",
 	"Deletes any entries matching the nick!user@host provided.",
@@ -134,6 +132,7 @@ const char *sns_help_del[] = {
 };
 
 const char *sns_help_status[] = {
+	"Displays Seen Statistics",
 	"Syntax: \2STATUS\2",
 	"",
 	"Displays seenserv status information and statistics.",

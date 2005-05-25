@@ -23,13 +23,15 @@
 #include "neostats.h"    /* Required for bot support */
 #include "seenserv.h"
 
+#define MAX_NICK_HISTORY 5
+#define SEEN_ENTRY_NICK_SIZE ( ( MAXNICK + 3 ) * MAX_NICK_HISTORY )
+
 static list_t *seenlist;
 
-static char timetext[4][12];
 static char combinedtimetext[SS_GENCHARLEN];
 static char matchstr[USERHOSTLEN];
 static char currentlyconnectedtext[SS_GENCHARLEN];
-static char seenentrynick[5][MAXNICK+3];
+static char seenentrynick[SEEN_ENTRY_NICK_SIZE];
 static char matchednickstr[SS_MESSAGESIZE];
 
 /** @brief findnick
@@ -187,24 +189,6 @@ void destroyseenlist(void)
 	list_destroy_auto(seenlist);
 }
 
-/*
- * Seen for wildcarded Host
-*/
-int sns_cmd_seenhost(CmdParams *cmdparams) 
-{
-	SET_SEGV_LOCATION();
-	return CheckSeenData(cmdparams, SS_CHECK_WILDCARD);
-}
-
-/*
- * Seen for valid nickname
-*/
-int sns_cmd_seennick(CmdParams *cmdparams)
-{
-	SET_SEGV_LOCATION();
-	return CheckSeenData(cmdparams, SS_CHECK_NICK);
-}
-
 /** seen_report
  *
  *  handles channel/user message selection
@@ -224,6 +208,104 @@ void seen_report( CmdParams *cmdparams, const char *fmt, ... )
 		irc_chanprivmsg (sns_bot, cmdparams->channel->name, seen_report_buf );
 }
 
+/*
+ * Check whether we can run the seen command
+*/
+static int SeenAvailable( CmdParams *cmdparams )
+{
+	if( cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER )
+	{
+		if( !SeenServ.enable && cmdparams->channel == NULL )
+			return NS_FALSE;
+		if( !SeenServ.enableseenchan && cmdparams->channel != NULL )
+			return NS_FALSE;
+	}
+	return NS_TRUE;
+}
+
+/*
+ * Seen for wildcarded Host
+*/
+int sns_cmd_seenhost(CmdParams *cmdparams) 
+{
+	SET_SEGV_LOCATION();
+	if( SeenAvailable( cmdparams ) == NS_FALSE )
+		return NS_SUCCESS;
+	if( CheckSeenData( cmdparams, SS_CHECK_WILDCARD ) == NS_FAILURE )
+		seen_report( cmdparams, "Sorry %s, I can't remember seeing anyone matching that mask (%s)", cmdparams->source->name, matchstr );
+	return NS_SUCCESS;
+}
+
+/*
+ * Seen for valid nickname
+*/
+int sns_cmd_seennick(CmdParams *cmdparams)
+{
+	Client *u;
+
+	SET_SEGV_LOCATION();
+	if( SeenAvailable( cmdparams ) == NS_FALSE )
+		return NS_SUCCESS;
+	if( ValidateNick( cmdparams->av[0] ) == NS_FAILURE ) 
+	{
+		seen_report( cmdparams, "%s is not a valid nickname", cmdparams->av[0] );
+		return NS_SUCCESS;
+	}
+	u = FindUser( cmdparams->av[0] );
+	if (u) 
+	{
+		seen_report( cmdparams, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
+		return NS_SUCCESS;
+	}
+	if( CheckSeenData( cmdparams, SS_CHECK_NICK ) == NS_FAILURE )
+		seen_report( cmdparams, "Sorry %s, I can't remember seeing anyone called %s", cmdparams->source->name, cmdparams->av[0] );
+	return NS_SUCCESS;
+}
+
+/*
+ * Build time string
+*/
+void BuildTimeString( int ts )
+{
+	static char temptimetext[12];
+	int d, h, m, s;
+
+	combinedtimetext[0] = '\0';
+	if (ts > 0) 
+	{
+		s = ( ts % 60 );
+		ts -= s;
+		ts = ( ts / 60 );
+		m = ( ts % 60 );
+		ts -= m;
+		ts = ( ts / 60 );
+		h = ( ts % 24 );
+		ts -= h;
+		d = ( ts / 24 );
+		if( d )
+		{
+			ircsnprintf( temptimetext, 12, "%d Days ", d );
+			strlcat( combinedtimetext, temptimetext, SS_GENCHARLEN );
+		}
+		if( h )
+		{
+			ircsnprintf( temptimetext, 12, "%d Hours ", h );
+			strlcat( combinedtimetext, temptimetext, SS_GENCHARLEN );
+		}
+		if( m )
+		{
+			ircsnprintf( temptimetext, 12, "%d Minutes ", m );
+			strlcat( combinedtimetext, temptimetext, SS_GENCHARLEN );
+		}
+		if( s )
+		{
+			ircsnprintf( temptimetext, 12, "%d Seconds", s );
+			strlcat( combinedtimetext, temptimetext, SS_GENCHARLEN );
+		}
+	} else {
+		ircsnprintf( combinedtimetext, SS_GENCHARLEN, "0 Seconds" );
+	}
+}
 
 /*
  * Check For Seen Records
@@ -231,41 +313,17 @@ void seen_report( CmdParams *cmdparams, const char *fmt, ... )
 int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 {
 	lnode_t *ln;
-	SeenData *sd;
-	SeenData *sdo;
+	SeenData *sd, *sdo;
 	Client *u;
 	Channel *c;
-	char *seenhostmask;
-	int d, h, m, s, matchfound, seenentriesfound;
+	int matchfound = 0, seenentriesfound = 0;
+	int isopersource = 0;
 	
-	if (!SeenServ.enable && cmdparams->channel == NULL && cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER)
-		return NS_SUCCESS;
-	if (!SeenServ.enableseenchan && cmdparams->channel != NULL && cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER)
-		return NS_SUCCESS;
-	if (ValidateNick(cmdparams->av[0]) == NS_SUCCESS) 
-	{
-		u = FindUser(cmdparams->av[0]);
-		if (u) 
-		{
-			seen_report( cmdparams, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
-			return NS_SUCCESS;
-		}
-	}
-	if (checktype == SS_CHECK_NICK) 
-	{
-		if (ValidateNick(cmdparams->av[0]) == NS_FAILURE) 
-		{
-			seen_report( cmdparams, "%s is not a valid nickname", cmdparams->av[0] );
-			return NS_SUCCESS;
-		}
-	}
-	for ( d = 0 ; d < 5 ; d++ ) {
-		seenentrynick[d][0] = '\0';
-		if (d < 4)
-			timetext[d][0] = '\0';
-	}
+	if( cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER )
+		isopersource = 1;
+
+	seenentrynick[0] = '\0';
 	currentlyconnectedtext[0] = '\0';
-	h = m = s = seenentriesfound = 0;
 	if (checktype == SS_CHECK_WILDCARD) 
 	{
 		if ( strchr( cmdparams->av[0], '*' ) )
@@ -274,137 +332,116 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 			ircsnprintf(matchstr, USERHOSTLEN, "*%s*", cmdparams->av[0]);
 	}
 	ln = list_last(seenlist);
-	while (ln != NULL && seenentriesfound < 5) 
+	while( ln != NULL && seenentriesfound < MAX_NICK_HISTORY ) 
 	{
-		matchfound = 0;
 		sd = lnode_get(ln);
 		if (checktype == SS_CHECK_NICK) 
 		{
-			if (!ircstrcasecmp(cmdparams->av[0], sd->nick))
+			if( !ircstrcasecmp( cmdparams->av[0], sd->nick ) )
 				matchfound = 1;
-		} else if (checktype == SS_CHECK_WILDCARD) {
-			if ( ( match(matchstr, sd->userhost) && cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER ) || match(matchstr, sd->uservhost) )
+		} 
+		else if (checktype == SS_CHECK_WILDCARD) 
+		{
+			if( isopersource )
+			{
+				if ( match( matchstr, sd->userhost ) )
+					matchfound = 1;
+			}
+			if( match( matchstr, sd->uservhost ) )
 				matchfound = 1;
 		}
 		if (matchfound) 
 		{
-			if (!seenentriesfound) 
+			seenentriesfound++;
+			if( seenentriesfound == 0 ) 
 			{
 				sdo = sd;
 				if (checktype == SS_CHECK_NICK)
-					seenentriesfound = 4;
+					break;
 				else
-					strlcpy(seenentrynick[seenentriesfound], sd->nick, MAXNICK+3);
+					strlcpy( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
 			} else {
-				ircsnprintf(seenentrynick[seenentriesfound], MAXNICK+3, ", %s", sd->nick);
+				strlcat( seenentrynick, ", ", SEEN_ENTRY_NICK_SIZE );
+				strlcat( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
 			}
-			seenentriesfound++;
 		}
 		ln = list_prev(seenlist, ln);
 	}
-	if (seenentriesfound) 
+	if( matchfound == 0 ) 
+		return NS_FAILURE;
+	BuildTimeString( ( int )( me.now - sdo->seentime ) );
+	matchednickstr[0] = '\0';
+	if( seenentriesfound > 1 )
+		ircsnprintf(matchednickstr, SS_MESSAGESIZE, "The %d most recent matches are - %s : ", seenentriesfound);
+	switch( sdo->seentype )
 	{
-		d = (me.now - sdo->seentime);
-		if (d > 0) 
-		{
-			s = (d % 60);
-			d -= s;
-			d = (d / 60);
-			m = (d % 60);
-			d -= m;
-			d = (d / 60);
-			h = (d % 24);
-			d -= h;
-			d = (d / 24);
-			if (d)
-				ircsnprintf(timetext[0], 12, "%d Days ", d);
-			if (h)
-				ircsnprintf(timetext[1], 12, "%d Hours ", h);
-			if (m)
-				ircsnprintf(timetext[2], 12, "%d Minutes ", m);
-			if (s)
-				ircsnprintf(timetext[3], 12, "%d Seconds", s);
-			ircsnprintf(combinedtimetext, SS_GENCHARLEN, "%s%s%s%s", timetext[0], timetext[1], timetext[2], timetext[3]);
-		} else {
-			ircsnprintf(combinedtimetext, SS_GENCHARLEN, "0 Seconds");
-		}
-		matchednickstr[0] = '\0';
-		if (checktype == SS_CHECK_WILDCARD && seenentriesfound > 1)
-			ircsnprintf(matchednickstr, SS_MESSAGESIZE, "The %d most recent matches are - %s%s%s%s%s : ", seenentriesfound, seenentrynick[0], seenentrynick[1], seenentrynick[2], seenentrynick[3], seenentrynick[4]);
-		switch( sdo->seentype )
-		{
-			case SS_CONNECTED:
-				u = FindUser(sdo->nick);
-				if (u) 
+		case SS_CONNECTED:
+			u = FindUser(sdo->nick);
+			if (u) 
+			{
+				if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask))
+					ircsnprintf(currentlyconnectedtext, SS_GENCHARLEN, ", %s is currently connected", u->name);
+			}
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", matchednickstr, sdo->userhost, combinedtimetext, currentlyconnectedtext );
+			else
+				seen_report( cmdparams, "%s%s was last seen connecting %s ago%s", matchednickstr, sdo->nick, combinedtimetext, currentlyconnectedtext );
+			break;
+		case SS_QUIT:
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen quiting %s ago, stating %s", matchednickstr, sdo->userhost, combinedtimetext, sdo->message );
+			else
+				seen_report( cmdparams, "%s%s was last seen quiting %s ago, stating %s", matchednickstr, sdo->uservhost, combinedtimetext, sdo->message);
+			break;
+		case SS_KILLED:
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen being killed %s ago %s", matchednickstr, sdo->userhost, combinedtimetext, sdo->message );
+			else
+				seen_report( cmdparams, "%s%s was last seen being killed %s ago %s", matchednickstr, sdo->uservhost, combinedtimetext, sdo->message );
+			break;
+		case SS_NICKCHANGE:
+			u = FindUser(sdo->message);
+			if (u) 
+			{
+				if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask))
+					ircsnprintf(currentlyconnectedtext, SS_GENCHARLEN, ", %s is currently connected", u->name);
+			}
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen changing Nickname %s ago to %s%s", matchednickstr, sdo->userhost, combinedtimetext, sdo->message, currentlyconnectedtext );
+			else
+				seen_report( cmdparams, "%s%s was last seen changing Nickname %s ago to %s%s", matchednickstr, sdo->uservhost, combinedtimetext, sdo->message, currentlyconnectedtext );
+			break;
+		case SS_JOIN:
+			u = FindUser(sdo->nick);
+			if (u) 
+			{
+				if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask)) 
 				{
-					if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask))
-						ircsnprintf(currentlyconnectedtext, SS_GENCHARLEN, ", %s is currently connected", u->name);
-				}
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen connecting %s ago%s", matchednickstr, sdo->userhost, combinedtimetext, currentlyconnectedtext);
-				else
-					seen_report( cmdparams, "%s%s was last seen connecting %s ago%s", matchednickstr, sdo->nick, combinedtimetext, currentlyconnectedtext );
-				break;
-			case SS_QUIT:
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen quiting %s ago, stating %s", matchednickstr, sdo->userhost, combinedtimetext, sdo->message);
-				else
-					seen_report( cmdparams, "%s%s was last seen quiting %s ago, stating %s", matchednickstr, sdo->uservhost, combinedtimetext, sdo->message);
-				break;
-			case SS_KILLED:
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being killed %s ago %s", matchednickstr, sdo->userhost, combinedtimetext, sdo->message);
-				else
-					seen_report( cmdparams, "%s%s was last seen being killed %s ago %s", matchednickstr, sdo->uservhost, combinedtimetext, sdo->message );
-				break;
-			case SS_NICKCHANGE:
-				u = FindUser(sdo->message);
-				if (u) 
-				{
-					if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask))
-						ircsnprintf(currentlyconnectedtext, SS_GENCHARLEN, ", %s is currently connected", u->name);
-				}
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen changing Nickname %s ago to %s%s", matchednickstr, sdo->userhost, combinedtimetext, sdo->message, currentlyconnectedtext);
-				else
-					seen_report( cmdparams, "%s%s was last seen changing Nickname %s ago to %s%s", matchednickstr, sdo->uservhost, combinedtimetext, sdo->message, currentlyconnectedtext );
-				break;
-			case SS_JOIN:
-				u = FindUser(sdo->nick);
-				if (u) 
-				{
-					if (!ircstrcasecmp(sdo->userhost, u->user->userhostmask)) 
+					c = FindChannel(sdo->message);
+					if (c) 
 					{
-						c = FindChannel(sdo->message);
-						if (c) 
-						{
-							if (IsChannelMember(c, u) && !is_hidden_chan(c))
-								ircsnprintf(currentlyconnectedtext, SS_GENCHARLEN, ", %s is currently in %s", u->name, c->name);
-						}
+						if (IsChannelMember(c, u) && !is_hidden_chan(c))
+							ircsnprintf(currentlyconnectedtext, SS_GENCHARLEN, ", %s is currently in %s", u->name, c->name);
 					}
 				}
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Joining %s %s ago%s", matchednickstr, sdo->userhost, sdo->message, combinedtimetext, currentlyconnectedtext);
-				else
-					seen_report( cmdparams, "%s%s was last seen Joining %s %s ago%s", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext, currentlyconnectedtext );
-				break;
-			case SS_PART:
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Parting %s %s ago", matchednickstr, sdo->userhost, sdo->message, combinedtimetext);
-				else
-					seen_report( cmdparams, "%s%s was last seen Parting %s %s ago", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext );
-				break;
-			case SS_KICKED:
-				if (cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER && cmdparams->channel == NULL)
-					irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen being Kicked From %s %s ago", matchednickstr, sdo->userhost, sdo->message, combinedtimetext);
-				else
-					seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext);
-				break;
-		}
-	} else if (checktype == SS_CHECK_NICK) {
-		seen_report( cmdparams, "Sorry %s, I can't remember seeing anyone called %s", cmdparams->source->name, cmdparams->av[0] );
-	} else if (checktype == SS_CHECK_WILDCARD) {
-		seen_report( cmdparams, "Sorry %s, I can't remember seeing anyone matching that mask (%s)", cmdparams->source->name, matchstr );
+			}
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg (sns_bot, cmdparams->source, "%s%s was last seen Joining %s %s ago%s", matchednickstr, sdo->userhost, sdo->message, combinedtimetext, currentlyconnectedtext);
+			else
+				seen_report( cmdparams, "%s%s was last seen Joining %s %s ago%s", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext, currentlyconnectedtext );
+			break;
+		case SS_PART:
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen Parting %s %s ago", matchednickstr, sdo->userhost, sdo->message, combinedtimetext );
+			else
+				seen_report( cmdparams, "%s%s was last seen Parting %s %s ago", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext );
+			break;
+		case SS_KICKED:
+			if( isopersource && cmdparams->channel == NULL )
+				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen being Kicked From %s %s ago", matchednickstr, sdo->userhost, sdo->message, combinedtimetext );
+			else
+				seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext);
+			break;
 	}
 	return NS_SUCCESS;
 }
