@@ -353,7 +353,7 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 		if (matchfound) 
 		{
 			seenentriesfound++;
-			if( seenentriesfound == 0 ) 
+			if( seenentriesfound == 1 ) 
 			{
 				sdo = sd;
 				if (checktype == SS_CHECK_NICK)
@@ -364,15 +364,16 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 				strlcat( seenentrynick, ", ", SEEN_ENTRY_NICK_SIZE );
 				strlcat( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
 			}
+			matchfound = 0;
 		}
 		ln = list_prev(seenlist, ln);
 	}
-	if( matchfound == 0 ) 
+	if( seenentriesfound == 0 ) 
 		return NS_FAILURE;
 	BuildTimeString( ( int )( me.now - sdo->seentime ) );
 	matchednickstr[0] = '\0';
 	if( seenentriesfound > 1 )
-		ircsnprintf(matchednickstr, SS_MESSAGESIZE, "The %d most recent matches are - %s : ", seenentriesfound);
+		ircsnprintf(matchednickstr, SS_MESSAGESIZE, "The %d most recent matches are - %s : ", seenentriesfound, seenentrynick);
 	switch( sdo->seentype )
 	{
 		case SS_CONNECTED:

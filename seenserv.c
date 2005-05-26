@@ -25,10 +25,9 @@
 
 /** Copyright info */
 const char *sns_copyright[] = {
-	"Copyright (c) 2004-2005 DeadNotBuried",
-	"Portions Copyright (c) 1999-2005, NeoStats",
-	NULL
-};
+	"Copyright (c) 2005, NeoStats",
+	"http://www.neostats.net/",
+	NULL};
 
 const char *sns_about[] = {
 	"\2Seen Service\2",
@@ -43,7 +42,7 @@ const char *sns_about[] = {
 static bot_cmd sns_commands[]=
 {
 	{"SEEN",	sns_cmd_seenhost,	1,	0,			sns_help_seen},
-	{"SEENNICK",sns_cmd_seennick,	1,	0,			sns_help_seennick},
+	{"SEENNICK",	sns_cmd_seennick,	1,	0,			sns_help_seennick},
 	{"DEL",		sns_cmd_del,		1,	NS_ULEVEL_ADMIN,	sns_help_del},
 	{"STATUS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status},
 	{NULL,		NULL,			0, 	0,			NULL}
