@@ -52,42 +52,28 @@ int findnick( const void *key1, const void *key2 )
 
 /*
  *  Removes SeenData for nickname if exists
+ *
+ * returns NS_SUCCESS if nick removed or NS_FAILURE if nick not in list
 */
-void removepreviousnick(char *nick)
+int removepreviousnick(char *nick)
 {
 	lnode_t *ln;
 	SeenData *sd;
 
-/*		for some reason this bit segfaults, so commented out for now
-		and manually searching for previous entries on the list
-		(it's not just the DBADelete)
-
-	ln = lnode_find( seenlist, nick, findnick );
-	if (!ln)
-		return;
-	sd = lnode_get(ln);
-	 * DBADelete( "seendata", sd->nick);
-	ns_free(sd);
-	list_delete(seenlist, ln);
-	lnode_destroy(ln);
-*/
 	ln = list_first( seenlist );
 	while ( ln )
 	{
 		sd = lnode_get( ln );
 		if (!ircstrcasecmp(nick, sd->nick)) 
 		{
-			/* commented out the delete due to segfaults
-			 *
-			 *  DBADelete( "seendata", sd->nick);
-			 */
 			ns_free( sd );
 			list_delete( seenlist, ln );
 			lnode_destroy( ln );
-			ln = list_last( seenlist );
+			return NS_SUCCESS;
 		}
 		ln = list_next( seenlist, ln );
 	}
+	return NS_FAILURE;
 }
 
 /*
@@ -96,8 +82,9 @@ void removepreviousnick(char *nick)
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
 {
 	SeenData *sd;
+	int nickremoved;
 	
-	removepreviousnick(nick);
+	nickremoved = removepreviousnick(nick);
 	sd = ns_calloc(sizeof(SeenData));
 	strlcpy(sd->nick, nick, MAXNICK);
 	strlcpy(sd->userhost, host, USERHOSTLEN);
@@ -107,13 +94,16 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
 	sd->seentime = me.now;
 	lnode_create_append( seenlist, sd );
 	DBAStore( "seendata", sd->nick,( void * )sd, sizeof( SeenData ) );
-	checkseenlistlimit();
+	/* only check list limit if the nick wasn't already in the list */
+	if( nickremoved == NS_FAILURE )
+		checkseenlistlimit(SS_LISTLIMIT_COUNT);
+	return;
 }
 
 /*
  *  Removes SeenData if records past max entries setting
 */
-void checkseenlistlimit(void)
+void checkseenlistlimit(int checktype)
 {
 	int currentlistcount;
 	int maxageallowed;
@@ -124,7 +114,7 @@ void checkseenlistlimit(void)
 	maxageallowed = me.now - ( SeenServ.expiretime * TS_ONE_DAY );
 	ln = list_first( seenlist );
 	sd = lnode_get( ln );
-	while( ( currentlistcount > SeenServ.maxentries ) || ( SeenServ.expiretime > 0 && ( maxageallowed > sd->seentime ) ) )
+	while( ( checktype == SS_LISTLIMIT_COUNT && currentlistcount > SeenServ.maxentries ) || ( checktype == SS_LISTLIMIT_AGE && SeenServ.expiretime > 0 && maxageallowed > sd->seentime ) )
 	{
 		ln2 = list_next( seenlist, ln );
 		DBADelete( "seendata", sd->nick );
@@ -135,6 +125,7 @@ void checkseenlistlimit(void)
 		sd = lnode_get( ln );
 		currentlistcount --;
 	}
+	return;
 }
 
 /*
@@ -155,6 +146,7 @@ void loadseendata(void)
 	seenlist = list_create( -1 );
 	DBAFetchRows( "seendata", loadseenrecords );
 	list_sort( seenlist, sortlistbytime );
+	return;
 }
 
 int sortlistbytime( const void *key1, const void *key2 )
@@ -172,10 +164,6 @@ void destroyseenlist(void)
 	lnode_t *ln, *ln2;
 	SeenData *sd;
 
-	/*
-	 * Destroy the Seen List just to ensure
-	 * all memory is free'd
-	*/
 	ln = list_first(seenlist);
 	while( ln )
 	{
@@ -323,16 +311,18 @@ void BuildTimeString( int ts )
 */
 int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 {
-	lnode_t *ln;
+	lnode_t *ln, *oln[MAX_NICK_HISTORY];
 	SeenData *sd, *sdo;
 	Client *u;
 	Channel *c;
-	int matchfound = 0, seenentriesfound = 0;
-	int isopersource = 0;
+	int matchfound = 0, seenentriesfound = 0, maxageallowed = 0;
+	int isopersource = 0, i;
 	
 	if( cmdparams->source->user->ulevel >= NS_ULEVEL_LOCOPER )
 		isopersource = 1;
-
+	/* used for expiring records on age if shown in request */
+	for( i = 0 ; i < MAX_NICK_HISTORY ; i++ )
+		oln[i] = NULL;
 	seenentrynick[0] = '\0';
 	currentlyconnectedtext[0] = '\0';
 	if (checktype == SS_CHECK_WILDCARD) 
@@ -363,6 +353,7 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 		}
 		if (matchfound) 
 		{
+			oln[seenentriesfound] = ln;
 			seenentriesfound++;
 			if( seenentriesfound == 1 ) 
 			{
@@ -454,6 +445,25 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 			else
 				seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext);
 			break;
+	}
+	/* expire displayed records on age if required */
+	if( SeenServ.expiretime > 0 )
+	{
+		maxageallowed = me.now - ( SeenServ.expiretime * TS_ONE_DAY );
+		i = 0;
+		while( i < MAX_NICK_HISTORY && oln[i] != NULL )
+		{
+			ln = oln[i];
+			sd = lnode_get( ln );
+			if( maxageallowed > sd->seentime )
+			{
+				DBADelete( "seendata", sd->nick );
+				ns_free( sd );
+				list_delete( seenlist, ln );
+				lnode_destroy( ln );
+			}
+			i++;
+		}
 	}
 	return NS_SUCCESS;
 }

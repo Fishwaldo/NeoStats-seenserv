@@ -2,6 +2,9 @@ SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
 3.0.a3-dev
+ - remove records based on age if they are displayed by a request (D)
+ - more optimising of limit and expiry checks (D)
+ - add timer for removing records based on age (D)
  - have Pseudo client join/part Channel when Seen Channel Enabled/Disabled (D)
  - remove verbose setting (D)
  - add segfault and debug reporting (D)

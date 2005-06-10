@@ -40,6 +40,13 @@ typedef enum SEEN_TYPE
 	SEEN_TYPE_MAX,
 } SEEN_TYPE;
 
+typedef enum SEEN_LISTLIMIT
+{
+	SS_LISTLIMIT_COUNT,	/* Check List Limit by Record Count */
+	SS_LISTLIMIT_AGE,	/* Check List Limit by Record Age */
+	SEEN_LISTLIMIT_MAX,
+} SEEN_LISTLIMIT;
+
 #define SS_MESSAGESIZE	300	/* Message Field Size */
 #define SS_GENCHARLEN	128	/* General Character Field Length */
 
@@ -112,10 +119,12 @@ static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
+int removeagedseenrecords(void);
 
 /* seen.c */
+int removepreviousnick(char *nick);
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);
-void checkseenlistlimit(void);
+void checkseenlistlimit(int checktype);
 void loadseendata(void);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
