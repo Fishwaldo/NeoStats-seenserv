@@ -228,9 +228,20 @@ static int SeenAvailable( CmdParams *cmdparams )
 */
 int sns_cmd_seenhost(CmdParams *cmdparams) 
 {
+	Client *u;
+
 	SET_SEGV_LOCATION();
 	if( SeenAvailable( cmdparams ) == NS_FALSE )
 		return NS_SUCCESS;
+	if( ValidateNick( cmdparams->av[0] ) == NS_SUCCESS ) 
+	{
+		u = FindUser( cmdparams->av[0] );
+		if (u) 
+		{
+			seen_report( cmdparams, "%s (%s@%s) is connected right now", u->name, u->user->username, u->user->vhost);
+			return NS_SUCCESS;
+		}
+	}
 	if( CheckSeenData( cmdparams, SS_CHECK_WILDCARD ) == NS_FAILURE )
 		seen_report( cmdparams, "Sorry %s, I can't remember seeing anyone matching that mask (%s)", cmdparams->source->name, matchstr );
 	return NS_SUCCESS;
