@@ -312,7 +312,7 @@ void BuildTimeString( int ts )
 int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 {
 	lnode_t *ln, *oln[MAX_NICK_HISTORY];
-	SeenData *sd, *sdo;
+	SeenData *sd, *sdo = NULL;
 	Client *u;
 	Channel *c;
 	int matchfound = 0, seenentriesfound = 0, maxageallowed = 0;
@@ -444,6 +444,8 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 				irc_prefmsg( sns_bot, cmdparams->source, "%s%s was last seen being Kicked From %s %s ago", matchednickstr, sdo->userhost, sdo->message, combinedtimetext );
 			else
 				seen_report( cmdparams, "%s%s was last seen Kicked From %s %s", matchednickstr, sdo->uservhost, sdo->message, combinedtimetext);
+			break;
+		default:
 			break;
 	}
 	/* expire displayed records on age if required */

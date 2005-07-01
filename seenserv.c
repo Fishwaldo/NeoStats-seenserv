@@ -23,6 +23,21 @@
 #include "neostats.h"    /* Required for bot support */
 #include "seenserv.h"
 
+
+static int sns_set_enablechan (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_exclusions (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_eventsignon( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventquit( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventkill( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
+
+
 /** Copyright info */
 const char *sns_copyright[] = {
 	"Copyright (c) 2005, NeoStats",
