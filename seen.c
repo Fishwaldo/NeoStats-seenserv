@@ -60,7 +60,7 @@ int removepreviousnick(char *nick)
 	lnode_t *ln;
 	SeenData *sd;
 
-	ln = list_first( seenlist );
+	ln = list_last( seenlist );
 	while ( ln )
 	{
 		sd = lnode_get( ln );
@@ -71,7 +71,7 @@ int removepreviousnick(char *nick)
 			lnode_destroy( ln );
 			return NS_SUCCESS;
 		}
-		ln = list_next( seenlist, ln );
+		ln = list_prev( seenlist, ln );
 	}
 	return NS_FAILURE;
 }
@@ -92,12 +92,39 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
 	strlcpy(sd->message, message ? message : "", SS_MESSAGESIZE);
 	sd->seentype = type;
 	sd->seentime = me.now;
+	sd->recordsaved = 0;
 	lnode_create_append( seenlist, sd );
-	DBAStore( "seendata", sd->nick,( void * )sd, sizeof( SeenData ) );
 	/* only check list limit if the nick wasn't already in the list */
 	if( nickremoved == NS_FAILURE )
 		checkseenlistlimit(SS_LISTLIMIT_COUNT);
 	return;
+}
+
+/*
+ * Save Data to DB on timer
+*/
+int dbsavetimer(void) 
+{
+	SET_SEGV_LOCATION();
+	lnode_t *ln, *ln2;
+	SeenData *sd;
+	int savecount=0;
+	
+	ln = list_last( seenlist );
+	while ( ln )
+	{
+		sd = lnode_get( ln );
+		if (sd->recordsaved == 0)
+		{
+			savecount++;
+			sd->recordsaved = 1;
+			DBAStore( "seendata", sd->nick,( void * )sd, sizeof( SeenData ) );
+			ln = list_prev( seenlist, ln );
+		} else {
+			return NS_SUCCESS;
+		}		
+	}
+	return NS_SUCCESS;
 }
 
 /*
@@ -137,6 +164,7 @@ int loadseenrecords(void *data, int size)
 
 	sd = ns_calloc( sizeof( SeenData ) );
 	os_memcpy( sd, data, sizeof( SeenData ) );
+	sd->recordsaved = 1;
 	lnode_create_append( seenlist, sd );
 	return NS_FALSE;
 }
@@ -221,6 +249,8 @@ int sns_cmd_seenhost(CmdParams *cmdparams)
 	SET_SEGV_LOCATION();
 	if( SeenAvailable( cmdparams ) == NS_FALSE )
 		return NS_SUCCESS;
+	/* ensure DB is saved before doing lookup */
+	dbsavetimer();
 	if( ValidateNick( cmdparams->av[0] ) == NS_SUCCESS ) 
 	{
 		u = FindUser( cmdparams->av[0] );
@@ -245,6 +275,8 @@ int sns_cmd_seennick(CmdParams *cmdparams)
 	SET_SEGV_LOCATION();
 	if( SeenAvailable( cmdparams ) == NS_FALSE )
 		return NS_SUCCESS;
+	/* ensure DB is saved before doing lookup */
+	dbsavetimer();
 	if( ValidateNick( cmdparams->av[0] ) == NS_FAILURE ) 
 	{
 		seen_report( cmdparams, "%s is not a valid nickname", cmdparams->av[0] );

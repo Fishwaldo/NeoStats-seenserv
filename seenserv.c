@@ -36,7 +36,7 @@ static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
-
+static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason);
 
 /** Copyright info */
 const char *sns_copyright[] = {
@@ -78,6 +78,7 @@ static bot_setting sns_settings[]=
 	{"EVENTPART",		&SeenServ.eventpart,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventpart,		sns_set_eventpart,	(void *)1 },
 	{"EVENTKICK",		&SeenServ.eventkick,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventkick,		sns_set_eventkick,	(void *)1 },
 	{"EXPIRETIME",		&SeenServ.expiretime,		SET_TYPE_INT,		0,	1000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_expiretime,	sns_set_expiretime,	(void *)0 },
+	{"DBUPDATETIME",	&SeenServ.dbupdatetime,		SET_TYPE_INT,		1,	900,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_dbupdatetime,	sns_set_dbupdatetime,	(void *)300 },
 	{NULL,			NULL,				0,			0,	0,		0,			NULL,	NULL,				NULL, 			NULL },
 };
 
@@ -144,6 +145,7 @@ int ModSynch (void)
 		irc_chanalert (sns_bot, "Seen Channel Not Enabled");
 	}
 	AddTimer (TIMER_TYPE_DAILY, removeagedseenrecords, "removeagedseenrecords", 0);
+	AddTimer (TIMER_TYPE_INTERVAL, dbsavetimer, "seenservdbsavetimer", SeenServ.dbupdatetime);
 	return NS_SUCCESS;
 };
 
@@ -162,7 +164,9 @@ int ModInit( void )
 */
 int ModFini( void )
 {
+	DelTimer ("seenservdbsavetimer");
 	DelTimer ("removeagedseenrecords");
+	dbsavetimer();
 	destroyseenlist();
 	return NS_SUCCESS;
 }
@@ -342,6 +346,16 @@ static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason)
 		checkseenlistlimit(SS_LISTLIMIT_AGE);
 		return NS_SUCCESS;
 	}
+	return NS_SUCCESS;
+}
+
+/*
+ * Check DB Update Time and update timer interval
+*/
+static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason) 
+{
+	if (reason == SET_CHANGE) 
+		SetTimerInterval( "seenservdbsavetimer", SeenServ.dbupdatetime );
 	return NS_SUCCESS;
 }
 

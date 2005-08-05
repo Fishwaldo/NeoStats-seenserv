@@ -107,6 +107,14 @@ const char *sns_help_set_expiretime[] = {
 	NULL
 };
 
+const char *sns_help_set_dbupdatetime[] = {
+	"\2DBUPDATETIME <seconds>\2",
+	"Sets how often data is written to the database.",
+	"NOTE: Data will also be saved when a SEEN or",
+	"SEENNICK command is performed.",
+	NULL
+};
+
 const char *sns_help_seen[] = {
 	"Displays Last Seen Nicks",
 	"Syntax: \2SEEN <host>\2",

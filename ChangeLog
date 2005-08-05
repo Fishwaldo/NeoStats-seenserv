@@ -2,6 +2,7 @@ SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
 3.0.a3-dev
+ - save records to db on configurable timer (D)
  - remove records based on age if they are displayed by a request (D)
  - more optimising of limit and expiry checks (D)
  - add timer for removing records based on age (D)

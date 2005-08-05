@@ -67,6 +67,7 @@ struct SeenServ {
 	int eventpart;
 	int eventkick;
 	int expiretime;
+	int dbupdatetime;
 } SeenServ;
 
 typedef struct SeenData {
@@ -76,6 +77,7 @@ typedef struct SeenData {
 	char message[SS_MESSAGESIZE];
 	SEEN_TYPE seentype;
 	time_t seentime;
+	int recordsaved;
 } SeenData;
 
 /* SeenServ Module Help - seenserv_help.c */
@@ -92,6 +94,7 @@ extern const char *sns_help_set_eventjoin[];
 extern const char *sns_help_set_eventpart[];
 extern const char *sns_help_set_eventkick[];
 extern const char *sns_help_set_expiretime[];
+extern const char *sns_help_set_dbupdatetime[];
 extern const char *sns_help_seen[];
 extern const char *sns_help_seennick[];
 extern const char *sns_help_del[];
@@ -112,6 +115,7 @@ int removeagedseenrecords(void);
 /* seen.c */
 int removepreviousnick(char *nick);
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);
+int dbsavetimer(void);
 void checkseenlistlimit(int checktype);
 void loadseendata(void);
 int sortlistbytime(const void *key1, const void *key2);
