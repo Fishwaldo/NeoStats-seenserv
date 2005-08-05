@@ -108,7 +108,6 @@ int dbsavetimer(void)
 	SET_SEGV_LOCATION();
 	lnode_t *ln, *ln2;
 	SeenData *sd;
-	int savecount=0;
 	
 	ln = list_last( seenlist );
 	while ( ln )
@@ -116,7 +115,6 @@ int dbsavetimer(void)
 		sd = lnode_get( ln );
 		if (sd->recordsaved == 0)
 		{
-			savecount++;
 			sd->recordsaved = 1;
 			DBAStore( "seendata", sd->nick,( void * )sd, sizeof( SeenData ) );
 			ln = list_prev( seenlist, ln );
