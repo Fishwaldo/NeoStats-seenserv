@@ -106,7 +106,7 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
  * 
  * remove records from list if set to work from DB only
 */
-int dbsavetimer(void) 
+int dbsavetimer(void *userptr) 
 {
 	SET_SEGV_LOCATION();
 	lnode_t *ln, *ln2;
@@ -273,7 +273,7 @@ int sns_cmd_seenhost(CmdParams *cmdparams)
 	if( SeenAvailable( cmdparams ) == NS_FALSE )
 		return NS_SUCCESS;
 	/* ensure DB is saved before doing lookup */
-	dbsavetimer();
+	dbsavetimer( NULL );
 	if( ValidateNick( cmdparams->av[0] ) == NS_SUCCESS ) 
 	{
 		u = FindUser( cmdparams->av[0] );
@@ -299,7 +299,7 @@ int sns_cmd_seennick(CmdParams *cmdparams)
 	if( SeenAvailable( cmdparams ) == NS_FALSE )
 		return NS_SUCCESS;
 	/* ensure DB is saved before doing lookup */
-	dbsavetimer();
+	dbsavetimer( NULL );
 	if( ValidateNick( cmdparams->av[0] ) == NS_FAILURE ) 
 	{
 		seen_report( cmdparams, "%s is not a valid nickname", cmdparams->av[0] );

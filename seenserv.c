@@ -146,8 +146,8 @@ int ModSynch (void)
 	} else {
 		irc_chanalert (sns_bot, "Seen Channel Not Enabled");
 	}
-	AddTimer (TIMER_TYPE_DAILY, removeagedseenrecords, "removeagedseenrecords", 0);
-	AddTimer (TIMER_TYPE_INTERVAL, dbsavetimer, "seenservdbsavetimer", SeenServ.dbupdatetime);
+	AddTimer (TIMER_TYPE_DAILY, removeagedseenrecords, "removeagedseenrecords", 0, NULL);
+	AddTimer (TIMER_TYPE_INTERVAL, dbsavetimer, "seenservdbsavetimer", SeenServ.dbupdatetime, NULL);
 	return NS_SUCCESS;
 };
 
@@ -170,7 +170,7 @@ int ModFini( void )
 {
 	DelTimer ("seenservdbsavetimer");
 	DelTimer ("removeagedseenrecords");
-	dbsavetimer();
+	dbsavetimer(NULL);
 	destroyseenlist();
 	return NS_SUCCESS;
 }
@@ -387,9 +387,9 @@ static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason)
 		{
 			loadseendata();
 			checkseenlistlimit(SS_LISTLIMIT_COUNT);
-			removeagedseenrecords();
+			removeagedseenrecords( NULL);
 		} else {
-			dbsavetimer();
+			dbsavetimer( NULL );
 		}
 	}
 	return NS_SUCCESS;
@@ -398,7 +398,7 @@ static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason)
 /*
  * Remove Aged Records if required
 */
-int removeagedseenrecords(void) 
+int removeagedseenrecords(void *userptr) 
 {
 	SET_SEGV_LOCATION();
 	if( SeenServ.expiretime > 0 )

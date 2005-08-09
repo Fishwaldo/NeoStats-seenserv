@@ -112,12 +112,12 @@ int SeenPartChan (CmdParams *cmdparams);
 int SeenKicked (CmdParams *cmdparams);
 
 /* seenserv.c */
-int removeagedseenrecords(void);
+int removeagedseenrecords(void *);
 
 /* seen.c */
 int removepreviousnick(char *nick);
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);
-int dbsavetimer(void);
+int dbsavetimer(void *);
 void checkseenlistlimit(int checktype);
 void createseenlist(void);
 void loadseendata(void);
