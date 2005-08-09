@@ -1,5 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, DeadNotBuried
+** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, Jeff Lang
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
 static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason);
 
 /** Copyright info */
 const char *sns_copyright[] = {
@@ -79,6 +80,7 @@ static bot_setting sns_settings[]=
 	{"EVENTKICK",		&SeenServ.eventkick,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_eventkick,		sns_set_eventkick,	(void *)1 },
 	{"EXPIRETIME",		&SeenServ.expiretime,		SET_TYPE_INT,		0,	1000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_expiretime,	sns_set_expiretime,	(void *)0 },
 	{"DBUPDATETIME",	&SeenServ.dbupdatetime,		SET_TYPE_INT,		1,	900,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_dbupdatetime,	sns_set_dbupdatetime,	(void *)300 },
+	{"MEMORYLIST",		&SeenServ.memorylist,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_memorylist,	sns_set_memorylist,	(void *)1 },
 	{NULL,			NULL,				0,			0,	0,		0,			NULL,	NULL,				NULL, 			NULL },
 };
 
@@ -155,6 +157,7 @@ int ModSynch (void)
 int ModInit( void )
 {
 	ModuleConfig (sns_settings);
+	createseenlist();
 	loadseendata();
 	return NS_SUCCESS;
 }
@@ -356,6 +359,38 @@ static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason)
 {
 	if (reason == SET_CHANGE) 
 		SetTimerInterval( "seenservdbsavetimer", SeenServ.dbupdatetime );
+	return NS_SUCCESS;
+}
+
+/*
+ * Check Meory List is actually changing, and perform actions as needed
+*/
+static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason) 
+{
+	if (reason == SET_VALIDATE)
+	{
+		if( SeenServ.memorylist && !ircstrcasecmp( cmdparams->av[1], "ON" ) )
+		{
+			irc_prefmsg (sns_bot, cmdparams->source, "ERROR: MEMORYLIST is already set ON");
+			return NS_FAILURE;
+		}
+		if( !SeenServ.memorylist && !ircstrcasecmp( cmdparams->av[1], "OFF" ) )
+		{
+			irc_prefmsg (sns_bot, cmdparams->source, "ERROR: MEMORYLIST is already set OFF");
+			return NS_FAILURE;
+		}
+	}
+	if (reason == SET_CHANGE) 
+	{
+		if( SeenServ.memorylist )
+		{
+			loadseendata();
+			checkseenlistlimit(SS_LISTLIMIT_COUNT);
+			checkseenlistlimit(SS_LISTLIMIT_AGE);
+		} else {
+			dbsavetimer();
+		}
+	}
 	return NS_SUCCESS;
 }
 

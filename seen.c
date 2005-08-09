@@ -1,5 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, DeadNotBuried
+** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, Jeff Lang
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ static char matchstr[USERHOSTLEN];
 static char currentlyconnectedtext[SS_GENCHARLEN];
 static char seenentrynick[SEEN_ENTRY_NICK_SIZE];
 static char matchednickstr[SS_MESSAGESIZE];
+static char nicklower[MAXNICK];
 
 /** @brief findnick
  *
@@ -102,6 +103,8 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
 
 /*
  * Save Data to DB on timer
+ * 
+ * remove records from list if set to work from DB only
 */
 int dbsavetimer(void) 
 {
@@ -113,14 +116,29 @@ int dbsavetimer(void)
 	while ( ln )
 	{
 		sd = lnode_get( ln );
+		ln2 = list_prev( seenlist, ln );
 		if (sd->recordsaved == 0)
 		{
 			sd->recordsaved = 1;
-			DBAStore( "seendata", sd->nick,( void * )sd, sizeof( SeenData ) );
-			ln = list_prev( seenlist, ln );
+			strlcpy( nicklower, sd->nick, MAXNICK );
+			DBAStore( "seendata", strlwr(nicklower),( void * )sd, sizeof( SeenData ) );
+			if( !SeenServ.memorylist )
+			{
+				ns_free( sd );
+				list_delete( seenlist, ln );
+				lnode_destroy( ln );
+			}
 		} else {
-			return NS_SUCCESS;
+			if( !SeenServ.memorylist )
+			{
+				ns_free( sd );
+				list_delete( seenlist, ln );
+				lnode_destroy( ln );
+			} else {
+				return NS_SUCCESS;
+			}
 		}		
+		ln = ln2;
 	}
 	return NS_SUCCESS;
 }
@@ -167,9 +185,13 @@ int loadseenrecords(void *data, int size)
 	return NS_FALSE;
 }
 
-void loadseendata(void)
+void createseenlist(void)
 {
 	seenlist = list_create( -1 );
+}
+
+void loadseendata(void)
+{
 	DBAFetchRows( "seendata", loadseenrecords );
 	list_sort( seenlist, sortlistbytime );
 	return;
@@ -245,6 +267,9 @@ int sns_cmd_seenhost(CmdParams *cmdparams)
 	Client *u;
 
 	SET_SEGV_LOCATION();
+	/* do lookup on nick only if working from DB and not memory list */
+	if( !SeenServ.memorylist )
+		return sns_cmd_seennick(cmdparams);
 	if( SeenAvailable( cmdparams ) == NS_FALSE )
 		return NS_SUCCESS;
 	/* ensure DB is saved before doing lookup */
@@ -362,43 +387,51 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 		else
 			ircsnprintf(matchstr, USERHOSTLEN, "*%s*", cmdparams->av[0]);
 	}
-	ln = list_last(seenlist);
-	while( ln != NULL && seenentriesfound < MAX_NICK_HISTORY ) 
+	if( !SeenServ.memorylist )
 	{
-		sd = lnode_get(ln);
-		if (checktype == SS_CHECK_NICK) 
+		sdo = ns_calloc( sizeof( SeenData ) );
+		strlcpy( nicklower, cmdparams->av[0], MAXNICK );
+		if( DBAFetch( "seendata", strlwr(nicklower), ( void * )sdo, sizeof( SeenData ) ) != NS_FAILURE )
+			seenentriesfound = 1;
+	} else {
+		ln = list_last(seenlist);
+		while( ln != NULL && seenentriesfound < MAX_NICK_HISTORY ) 
 		{
-			if( !ircstrcasecmp( cmdparams->av[0], sd->nick ) )
-				matchfound = 1;
-		} 
-		else if (checktype == SS_CHECK_WILDCARD) 
-		{
-			if( isopersource )
+			sd = lnode_get(ln);
+			if (checktype == SS_CHECK_NICK) 
 			{
+				if( !ircstrcasecmp( cmdparams->av[0], sd->nick ) )
+					matchfound = 1;
+			} 
+			else if (checktype == SS_CHECK_WILDCARD) 
+			{
+				if( isopersource )
+				{
 				if ( match( matchstr, sd->userhost ) )
 					matchfound = 1;
 			}
 			if( match( matchstr, sd->uservhost ) )
 				matchfound = 1;
-		}
-		if (matchfound) 
-		{
-			oln[seenentriesfound] = ln;
-			seenentriesfound++;
-			if( seenentriesfound == 1 ) 
-			{
-				sdo = sd;
-				if (checktype == SS_CHECK_NICK)
-					break;
-				else
-					strlcpy( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
-			} else {
-				strlcat( seenentrynick, ", ", SEEN_ENTRY_NICK_SIZE );
-				strlcat( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
 			}
-			matchfound = 0;
+			if (matchfound) 
+			{
+				oln[seenentriesfound] = ln;
+				seenentriesfound++;
+				if( seenentriesfound == 1 ) 
+				{
+					sdo = sd;
+					if (checktype == SS_CHECK_NICK)
+						break;
+					else
+						strlcpy( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
+				} else {
+					strlcat( seenentrynick, ", ", SEEN_ENTRY_NICK_SIZE );
+					strlcat( seenentrynick, sd->nick, SEEN_ENTRY_NICK_SIZE );
+				}
+				matchfound = 0;
+			}
+			ln = list_prev(seenlist, ln);
 		}
-		ln = list_prev(seenlist, ln);
 	}
 	if( seenentriesfound == 0 ) 
 		return NS_FAILURE;
@@ -478,23 +511,28 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 		default:
 			break;
 	}
-	/* expire displayed records on age if required */
-	if( SeenServ.expiretime > 0 )
+	if( !SeenServ.memorylist )
 	{
-		maxageallowed = me.now - ( SeenServ.expiretime * TS_ONE_DAY );
-		i = 0;
-		while( i < MAX_NICK_HISTORY && oln[i] != NULL )
+		ns_free( sdo );
+	} else {
+		/* expire displayed records on age if required */
+		if( SeenServ.expiretime > 0 )
 		{
-			ln = oln[i];
-			sd = lnode_get( ln );
-			if( maxageallowed > sd->seentime )
+			maxageallowed = me.now - ( SeenServ.expiretime * TS_ONE_DAY );
+			i = 0;
+			while( i < MAX_NICK_HISTORY && oln[i] != NULL )
 			{
-				DBADelete( "seendata", sd->nick );
-				ns_free( sd );
-				list_delete( seenlist, ln );
-				lnode_destroy( ln );
+				ln = oln[i];
+				sd = lnode_get( ln );
+				if( maxageallowed > sd->seentime )
+				{
+					DBADelete( "seendata", sd->nick );
+					ns_free( sd );
+					list_delete( seenlist, ln );
+					lnode_destroy( ln );
+				}
+				i++;
 			}
-			i++;
 		}
 	}
 	return NS_SUCCESS;
@@ -542,6 +580,11 @@ int sns_cmd_status(CmdParams *cmdparams)
 	SeenData *sd;
 
 	SET_SEGV_LOCATION();
+	if( !SeenServ.memorylist )
+	{
+		seen_report( cmdparams, "Seen Statistics Unavailable when using DB only" );
+		return NS_SUCCESS;
+	}
 	os_memset( seenstats, 0, sizeof( seenstats ) );
 	ln = list_first(seenlist);
 	while (ln) 

@@ -1,5 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, DeadNotBuried
+** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, Jeff Lang
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -115,11 +115,21 @@ const char *sns_help_set_dbupdatetime[] = {
 	NULL
 };
 
+const char *sns_help_set_memorylist[] = {
+	"\2MEMORYLIST <ON|OFF>\2",
+	"Sets if the seen data should be queried from an",
+	"In Memory List, if set to OFF queries will be from",
+	"the DB only, and lookups will only be able to be",
+	"made via the nickname and not the userhost",
+	NULL
+};
+
 const char *sns_help_seen[] = {
 	"Displays Last Seen Nicks",
-	"Syntax: \2SEEN <host>\2",
+	"Syntax: \2SEEN <nick|userhost>\2",
 	"",
 	"Displays the last seen entry of the matching entry.",
+	"NOTE: If queries are from the DB only, then only <nick> is a valid entry.",
 	NULL
 };
 
@@ -144,5 +154,6 @@ const char *sns_help_status[] = {
 	"Syntax: \2STATUS\2",
 	"",
 	"Displays seenserv status information and statistics.",
+	"NOTE: Statistics Unavailable when using DB only.",
 	NULL
 };

@@ -1,5 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, DeadNotBuried
+** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, Jeff Lang
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -68,6 +68,7 @@ struct SeenServ {
 	int eventkick;
 	int expiretime;
 	int dbupdatetime;
+	int memorylist;
 } SeenServ;
 
 typedef struct SeenData {
@@ -95,6 +96,7 @@ extern const char *sns_help_set_eventpart[];
 extern const char *sns_help_set_eventkick[];
 extern const char *sns_help_set_expiretime[];
 extern const char *sns_help_set_dbupdatetime[];
+extern const char *sns_help_set_memorylist[];
 extern const char *sns_help_seen[];
 extern const char *sns_help_seennick[];
 extern const char *sns_help_del[];
@@ -117,6 +119,7 @@ int removepreviousnick(char *nick);
 void addseenentry(char *nick, char *host, char *vhost, char *message, int type);
 int dbsavetimer(void);
 void checkseenlistlimit(int checktype);
+void createseenlist(void);
 void loadseendata(void);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
