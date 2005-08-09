@@ -513,6 +513,11 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 	}
 	if( !SeenServ.memorylist )
 	{
+		/* delete record if DB Only and past expiration date */
+		if( SeenServ.expiretime > 0 && ( ( me.now - ( SeenServ.expiretime * TS_ONE_DAY ) ) > sdo->seentime ) )
+		{
+			DBADelete( "seendata", strlwr(nicklower) );
+		}
 		ns_free( sdo );
 	} else {
 		/* expire displayed records on age if required */
