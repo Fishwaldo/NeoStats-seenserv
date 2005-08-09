@@ -158,7 +158,8 @@ int ModInit( void )
 {
 	ModuleConfig (sns_settings);
 	createseenlist();
-	loadseendata();
+	if( SeenServ.memorylist )
+		loadseendata();
 	return NS_SUCCESS;
 }
 
@@ -386,7 +387,7 @@ static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason)
 		{
 			loadseendata();
 			checkseenlistlimit(SS_LISTLIMIT_COUNT);
-			checkseenlistlimit(SS_LISTLIMIT_AGE);
+			removeagedseenrecords();
 		} else {
 			dbsavetimer();
 		}
