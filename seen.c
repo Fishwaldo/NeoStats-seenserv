@@ -108,10 +108,10 @@ void addseenentry(char *nick, char *host, char *vhost, char *message, int type)
 */
 int dbsavetimer(void *userptr) 
 {
-	SET_SEGV_LOCATION();
 	lnode_t *ln, *ln2;
 	SeenData *sd;
 	
+	SET_SEGV_LOCATION();
 	ln = list_last( seenlist );
 	while ( ln )
 	{
