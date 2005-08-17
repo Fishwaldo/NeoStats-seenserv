@@ -61,7 +61,7 @@ static bot_cmd sns_commands[]=
 	{"SEENNICK",	sns_cmd_seennick,	1,	0,			sns_help_seennick},
 	{"DEL",		sns_cmd_del,		1,	NS_ULEVEL_ADMIN,	sns_help_del},
 	{"STATUS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status},
-	{NULL,		NULL,			0, 	0,			NULL}
+	NS_CMD_END()
 };
 
 static bot_setting sns_settings[]=
@@ -81,7 +81,7 @@ static bot_setting sns_settings[]=
 	{"EXPIRETIME",		&SeenServ.expiretime,		SET_TYPE_INT,		0,	1000,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_expiretime,	sns_set_expiretime,	(void *)0 },
 	{"DBUPDATETIME",	&SeenServ.dbupdatetime,		SET_TYPE_INT,		1,	900,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_dbupdatetime,	sns_set_dbupdatetime,	(void *)300 },
 	{"MEMORYLIST",		&SeenServ.memorylist,		SET_TYPE_BOOLEAN,	0,	0,		NS_ULEVEL_ADMIN,	NULL,	sns_help_set_memorylist,	sns_set_memorylist,	(void *)1 },
-	{NULL,			NULL,				0,			0,	0,		0,			NULL,	NULL,				NULL, 			NULL },
+	NS_SETTING_END()
 };
 
 /*
