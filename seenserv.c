@@ -115,7 +115,7 @@ ModuleEvent module_events[] = {
 	{EVENT_JOIN,		SeenJoinChan,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_PART,		SeenPartChan,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_KICK,		SeenKicked,		EVENT_FLAG_EXCLUDE_ME},
-	{EVENT_NULL,		NULL}
+	NS_EVENT_END()
 };
 
 /** BotInfo */
