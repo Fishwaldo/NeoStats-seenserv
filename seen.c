@@ -187,7 +187,7 @@ int loadseenrecords(void *data, int size)
 
 void createseenlist(void)
 {
-	seenlist = list_create( -1 );
+	seenlist = list_create( LISTCOUNT_T_MAX );
 }
 
 void loadseendata(void)
