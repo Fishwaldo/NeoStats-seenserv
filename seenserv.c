@@ -157,6 +157,7 @@ int ModSynch (void)
 int ModInit( void )
 {
 	ModuleConfig (sns_settings);
+	DBAOpenTable("seendata");
 	createseenlist();
 	if( SeenServ.memorylist )
 		loadseendata();
@@ -172,6 +173,7 @@ int ModFini( void )
 	DelTimer ("removeagedseenrecords");
 	dbsavetimer(NULL);
 	destroyseenlist();
+	DBACloseTable("seendata");
 	return NS_SUCCESS;
 }
 
