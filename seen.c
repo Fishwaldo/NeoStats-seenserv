@@ -231,7 +231,7 @@ void destroyseenlist(void)
  */
 static char seen_report_buf[BUFSIZE];
 
-void seen_report( CmdParams *cmdparams, const char *fmt, ... )
+void seen_report( const CmdParams *cmdparams, const char *fmt, ... )
 {
 	va_list ap;
 
@@ -247,7 +247,7 @@ void seen_report( CmdParams *cmdparams, const char *fmt, ... )
 /*
  * Check whether we can run the seen command
 */
-static int SeenAvailable( CmdParams *cmdparams )
+static int SeenAvailable( const CmdParams *cmdparams )
 {
 	if( cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER )
 	{
@@ -262,7 +262,7 @@ static int SeenAvailable( CmdParams *cmdparams )
 /*
  * Seen for wildcarded Host
 */
-int sns_cmd_seenhost(CmdParams *cmdparams) 
+int sns_cmd_seenhost(const CmdParams *cmdparams) 
 {
 	Client *u;
 
@@ -291,7 +291,7 @@ int sns_cmd_seenhost(CmdParams *cmdparams)
 /*
  * Seen for valid nickname
 */
-int sns_cmd_seennick(CmdParams *cmdparams)
+int sns_cmd_seennick(const CmdParams *cmdparams)
 {
 	Client *u;
 
@@ -364,7 +364,7 @@ void BuildTimeString( int ts )
 /*
  * Check For Seen Records
 */
-int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
+int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype)
 {
 	lnode_t *ln, *oln[MAX_NICK_HISTORY];
 	SeenData *sd, *sdo = NULL;
@@ -546,7 +546,7 @@ int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype)
 /*
  * Delete all matching entries
 */
-int sns_cmd_del(CmdParams *cmdparams) 
+int sns_cmd_del(const CmdParams *cmdparams) 
 {
 	lnode_t *ln, *ln2;
 	SeenData *sd;
@@ -578,7 +578,7 @@ int sns_cmd_del(CmdParams *cmdparams)
 /*
  * Display Seen Statistics
 */
-int sns_cmd_status(CmdParams *cmdparams)
+int sns_cmd_status(const CmdParams *cmdparams)
 {
 	int seenstats[SEEN_TYPE_MAX];
 	lnode_t *ln;

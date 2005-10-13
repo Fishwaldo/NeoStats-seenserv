@@ -24,20 +24,20 @@
 #include "seenserv.h"
 
 
-static int sns_set_enablechan (CmdParams *cmdparams, SET_REASON reason);
-static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason);
-static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason);
-static int sns_set_exclusions (CmdParams *cmdparams, SET_REASON reason);
-static int sns_set_eventsignon( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_eventquit( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_eventkill( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason );
-static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason);
-static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason);
-static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_enablechan (const CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_seenchan (const CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_maxentries (const CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_exclusions (const CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_eventsignon( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventquit( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventkill( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventnick( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventjoin( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventpart( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_eventkick( const CmdParams *cmdparams, SET_REASON reason );
+static int sns_set_expiretime (const CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_dbupdatetime (const CmdParams *cmdparams, SET_REASON reason);
+static int sns_set_memorylist (const CmdParams *cmdparams, SET_REASON reason);
 
 /** Copyright info */
 const char *sns_copyright[] = {
@@ -180,7 +180,7 @@ int ModFini( void )
 /*
  * Seen Channel Enable/Disable
 */
-static int sns_set_enablechan (CmdParams *cmdparams, SET_REASON reason) 
+static int sns_set_enablechan (const CmdParams *cmdparams, SET_REASON reason) 
 {
 	if (!SeenServ.seenchan)
 		return NS_SUCCESS;
@@ -203,7 +203,7 @@ static int sns_set_enablechan (CmdParams *cmdparams, SET_REASON reason)
 /*
  * Seen Channel Setting
 */
-static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason) 
+static int sns_set_seenchan (const CmdParams *cmdparams, SET_REASON reason) 
 {
 	if (!SeenServ.enableseenchan)
 		return NS_SUCCESS;
@@ -227,7 +227,7 @@ static int sns_set_seenchan (CmdParams *cmdparams, SET_REASON reason)
 /*
  * Change Max Entries Saved
 */
-static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason) 
+static int sns_set_maxentries (const CmdParams *cmdparams, SET_REASON reason) 
 {
 	if (reason == SET_CHANGE) 
 	{
@@ -240,7 +240,7 @@ static int sns_set_maxentries (CmdParams *cmdparams, SET_REASON reason)
 /*
  * Enable/Disable Global Exclusions
 */
-static int sns_set_exclusions( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_exclusions( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 		SetAllEventFlags( EVENT_FLAG_USE_EXCLUDE, SeenServ.exclusions );
@@ -250,7 +250,7 @@ static int sns_set_exclusions( CmdParams *cmdparams, SET_REASON reason )
 /*
  * Enable/Disable Events
 */
-static int sns_set_eventsignon( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventsignon( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -262,7 +262,7 @@ static int sns_set_eventsignon( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static int sns_set_eventquit( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventquit( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -274,7 +274,7 @@ static int sns_set_eventquit( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static int sns_set_eventkill( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventkill( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -294,7 +294,7 @@ static int sns_set_eventkill( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventnick( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -306,7 +306,7 @@ static int sns_set_eventnick( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventjoin( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -318,7 +318,7 @@ static int sns_set_eventjoin( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventpart( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -330,7 +330,7 @@ static int sns_set_eventpart( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason )
+static int sns_set_eventkick( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -345,7 +345,7 @@ static int sns_set_eventkick( CmdParams *cmdparams, SET_REASON reason )
 /*
  * Check Entry Saved Time
 */
-static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason) 
+static int sns_set_expiretime (const CmdParams *cmdparams, SET_REASON reason) 
 {
 	if (reason == SET_CHANGE && SeenServ.expiretime > 0) 
 	{
@@ -358,7 +358,7 @@ static int sns_set_expiretime (CmdParams *cmdparams, SET_REASON reason)
 /*
  * Check DB Update Time and update timer interval
 */
-static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason) 
+static int sns_set_dbupdatetime (const CmdParams *cmdparams, SET_REASON reason) 
 {
 	if (reason == SET_CHANGE) 
 		SetTimerInterval( "seenservdbsavetimer", SeenServ.dbupdatetime );
@@ -368,7 +368,7 @@ static int sns_set_dbupdatetime (CmdParams *cmdparams, SET_REASON reason)
 /*
  * Check Meory List is actually changing, and perform actions as needed
 */
-static int sns_set_memorylist (CmdParams *cmdparams, SET_REASON reason) 
+static int sns_set_memorylist (const CmdParams *cmdparams, SET_REASON reason) 
 {
 	if (reason == SET_VALIDATE)
 	{

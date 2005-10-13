@@ -103,13 +103,13 @@ extern const char *sns_help_del[];
 extern const char *sns_help_status[];
 
 /* events.c */
-int SeenSignon (CmdParams *cmdparams);
-int SeenQuit (CmdParams *cmdparams);
-int SeenKill (CmdParams *cmdparams);
-int SeenNickChange (CmdParams *cmdparams);
-int SeenJoinChan (CmdParams *cmdparams);
-int SeenPartChan (CmdParams *cmdparams);
-int SeenKicked (CmdParams *cmdparams);
+int SeenSignon (const CmdParams *cmdparams);
+int SeenQuit (const CmdParams *cmdparams);
+int SeenKill (const CmdParams *cmdparams);
+int SeenNickChange (const CmdParams *cmdparams);
+int SeenJoinChan (const CmdParams *cmdparams);
+int SeenPartChan (const CmdParams *cmdparams);
+int SeenKicked (const CmdParams *cmdparams);
 
 /* seenserv.c */
 int removeagedseenrecords(void *);
@@ -123,8 +123,8 @@ void createseenlist(void);
 void loadseendata(void);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
-int sns_cmd_seenhost(CmdParams *cmdparams);
-int sns_cmd_seennick(CmdParams *cmdparams);
-int CheckSeenData(CmdParams *cmdparams, SEEN_CHECK checktype);
-int sns_cmd_del(CmdParams *cmdparams);
-int sns_cmd_status(CmdParams *cmdparams);
+int sns_cmd_seenhost(const CmdParams *cmdparams);
+int sns_cmd_seennick(const CmdParams *cmdparams);
+int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype);
+int sns_cmd_del(const CmdParams *cmdparams);
+int sns_cmd_status(const CmdParams *cmdparams);

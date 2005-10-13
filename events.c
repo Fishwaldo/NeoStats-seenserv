@@ -29,7 +29,7 @@ static char tmpmsg2[SS_MESSAGESIZE];
 /*
  * Signon Events
 */
-int SeenSignon (CmdParams *cmdparams) 
+int SeenSignon (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (ModIsUserExcluded(cmdparams->source))
@@ -42,7 +42,7 @@ int SeenSignon (CmdParams *cmdparams)
 /*
  * Quit Events
 */
-int SeenQuit (CmdParams *cmdparams) 
+int SeenQuit (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (ModIsUserExcluded(cmdparams->source))
@@ -56,7 +56,7 @@ int SeenQuit (CmdParams *cmdparams)
 /*
  * Kill Events
 */
-int SeenKill (CmdParams *cmdparams) 
+int SeenKill (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (ModIsUserExcluded(cmdparams->target))
@@ -70,7 +70,7 @@ int SeenKill (CmdParams *cmdparams)
 /*
  * Nick Events
 */
-int SeenNickChange (CmdParams *cmdparams) 
+int SeenNickChange (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (ModIsUserExcluded(cmdparams->source))
@@ -85,7 +85,7 @@ int SeenNickChange (CmdParams *cmdparams)
 /*
  * Join Events
 */
-int SeenJoinChan (CmdParams *cmdparams) 
+int SeenJoinChan (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (is_hidden_chan(cmdparams->channel) || ModIsUserExcluded(cmdparams->source) || ModIsChannelExcluded(cmdparams->channel))
@@ -98,7 +98,7 @@ int SeenJoinChan (CmdParams *cmdparams)
 /*
  * Part Events
 */
-int SeenPartChan (CmdParams *cmdparams) 
+int SeenPartChan (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (is_hidden_chan(cmdparams->channel) || ModIsUserExcluded(cmdparams->source) || ModIsChannelExcluded(cmdparams->channel))
@@ -116,7 +116,7 @@ int SeenPartChan (CmdParams *cmdparams)
 /*
  * Kick Events
 */
-int SeenKicked (CmdParams *cmdparams) 
+int SeenKicked (const CmdParams *cmdparams) 
 {
 	SET_SEGV_LOCATION();
 	if (is_hidden_chan(cmdparams->channel) || ModIsUserExcluded(cmdparams->target) || ModIsChannelExcluded(cmdparams->channel))
