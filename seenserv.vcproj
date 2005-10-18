@@ -155,13 +155,16 @@
 			RelativePath=".\ChangeLog">
 		</File>
 		<File
-			RelativePath=".\configure.in">
+			RelativePath=".\License">
 		</File>
 		<File
 			RelativePath=".\Makefile.in">
 		</File>
 		<File
 			RelativePath=".\modconfig.h.in">
+		</File>
+		<File
+			RelativePath=".\README.SeenServ">
 		</File>
 		<File
 			RelativePath=".\Relnotes">
