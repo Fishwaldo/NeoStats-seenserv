@@ -121,7 +121,7 @@ int dbsavetimer(void *userptr)
 		{
 			sd->recordsaved = 1;
 			strlcpy( nicklower, sd->nick, MAXNICK );
-			DBAStore( "seendata", strlwr(nicklower),( void * )sd, sizeof( SeenData ) );
+			DBAStore( "seendata", ns_strlwr(nicklower),( void * )sd, sizeof( SeenData ) );
 			if( !SeenServ.memorylist )
 			{
 				ns_free( sd );
@@ -391,7 +391,7 @@ int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype)
 	{
 		sdo = ns_calloc( sizeof( SeenData ) );
 		strlcpy( nicklower, cmdparams->av[0], MAXNICK );
-		if( DBAFetch( "seendata", strlwr(nicklower), ( void * )sdo, sizeof( SeenData ) ) != NS_FAILURE )
+		if( DBAFetch( "seendata", ns_strlwr(nicklower), ( void * )sdo, sizeof( SeenData ) ) != NS_FAILURE )
 			seenentriesfound = 1;
 	} else {
 		ln = list_last(seenlist);
@@ -516,7 +516,7 @@ int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype)
 		/* delete record if DB Only and past expiration date */
 		if( SeenServ.expiretime > 0 && ( ( me.now - ( SeenServ.expiretime * TS_ONE_DAY ) ) > sdo->seentime ) )
 		{
-			DBADelete( "seendata", strlwr(nicklower) );
+			DBADelete( "seendata", ns_strlwr(nicklower) );
 		}
 		ns_free( sdo );
 	} else {
