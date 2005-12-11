@@ -407,11 +407,11 @@ int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype)
 			{
 				if( isopersource )
 				{
-				if ( match( matchstr, sd->userhost ) )
+					if ( match( matchstr, sd->userhost ) )
+						matchfound = 1;
+				}
+				if( match( matchstr, sd->uservhost ) )
 					matchfound = 1;
-			}
-			if( match( matchstr, sd->uservhost ) )
-				matchfound = 1;
 			}
 			if (matchfound) 
 			{
