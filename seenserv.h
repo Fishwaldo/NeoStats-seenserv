@@ -20,6 +20,8 @@
 ** $Id$
 */
 
+#include MODULECONFIG
+
 /* Defines */
 typedef enum SEEN_CHECK
 {
