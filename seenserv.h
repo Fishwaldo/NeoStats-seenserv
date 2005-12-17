@@ -87,7 +87,7 @@ typedef struct SeenData {
 extern const char *sns_help_set_exclusions[];
 extern const char *sns_help_set_enable[];
 extern const char *sns_help_set_enableseenchan[];
-extern const char *sns_help_set_seenchan[];
+extern const char *sns_help_set_seenchanname[];
 extern const char *sns_help_set_maxentries[];
 extern const char *sns_help_set_eventsignon[];
 extern const char *sns_help_set_eventquit[];

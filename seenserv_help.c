@@ -46,8 +46,8 @@ const char *sns_help_set_enableseenchan[] = {
 	NULL
 };
 
-const char *sns_help_set_seenchan[] = {
-	"\2SEENCHAN <#Channel>\2",
+const char *sns_help_set_seenchanname[] = {
+	"\2SEENCHANNAME <#Channel>\2",
 	"Set Channel SeenServ accepts commands from in channel",
 	NULL
 };

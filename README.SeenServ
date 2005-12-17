@@ -80,7 +80,7 @@ bash$./configure [--with-neostats=<dir>]
    To Disable the Global Exclusion list and only use the Local one (NOTE: Both
    can be used concurrently) use SET EXCLUSIONS OFF
    
-   To enable the Seen Channel (Defaults to #Seen) use SETENABLESEENCHAN ON , SeenServ
+   To enable the Seen Channel (Defaults to #Seen) use SET ENABLESEENCHAN ON , SeenServ
    will then join the Seen Channel to accept Commands in channel from Non Opers.
    
    To Enable the Seen commands for Non Opers via Private message to SeenServ, use
