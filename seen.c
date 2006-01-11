@@ -160,7 +160,7 @@ void checkseenlistlimit(int checktype)
 	while( ( checktype == SS_LISTLIMIT_COUNT && currentlistcount > SeenServ.maxentries ) || ( checktype == SS_LISTLIMIT_AGE && SeenServ.expiretime > 0 && maxageallowed > sd->seentime ) )
 	{
 		ln2 = list_next( seenlist, ln );
-		DBADelete( "seendata", sd->nick );
+		DBADelete( "seendata", ns_strlwr( sd->nick ) );
 		ns_free( sd );
 		list_delete( seenlist, ln );
 		lnode_destroy( ln );

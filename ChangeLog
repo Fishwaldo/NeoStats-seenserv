@@ -1,7 +1,8 @@
 SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
-3.0.b1
+3.0.b1-dev
+ - fix removal of records from DB when using memory list only (D)
  - help fixups (D)
 3.0.a3
  - add option to use DB only or in memory list for lookups (D)
