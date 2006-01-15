@@ -6,6 +6,8 @@
 /Makefile.in -text
 /NEWS -text
 /README.SeenServ -text
+/README.SeenServ.html -text
+/README.SeenServ.xml -text
 /RELNOTES -text
 /configure -text
 /configure.in -text
