@@ -1,5 +1,5 @@
 /* SeenServ - Nickname Seen Service - NeoStats Addon Module
-** Copyright (c) 2003-2005 Justin Hammond, Mark Hetherington, Jeff Lang
+** Copyright (c) 2003-2006 Justin Hammond, Mark Hetherington, Jeff Lang
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ static int sns_set_memorylist (const CmdParams *cmdparams, SET_REASON reason);
 
 /** Copyright info */
 const char *sns_copyright[] = {
-	"Copyright (c) 2005, NeoStats",
+	"Copyright (c) 2006, NeoStats",
 	"http://www.neostats.net/",
 	NULL};
 
