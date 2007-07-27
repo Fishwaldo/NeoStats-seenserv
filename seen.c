@@ -160,7 +160,8 @@ void checkseenlistlimit(int checktype)
 	while( ( checktype == SS_LISTLIMIT_COUNT && currentlistcount > SeenServ.maxentries ) || ( checktype == SS_LISTLIMIT_AGE && SeenServ.expiretime > 0 && maxageallowed > sd->seentime ) )
 	{
 		ln2 = list_next( seenlist, ln );
-		DBADelete( "seendata", ns_strlwr( sd->nick ) );
+		strlcpy( nicklower, sd->nick, MAXNICK );
+		DBADelete( "seendata", ns_strlwr( nicklower ) );
 		ns_free( sd );
 		list_delete( seenlist, ln );
 		lnode_destroy( ln );
@@ -516,6 +517,7 @@ int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype)
 		/* delete record if DB Only and past expiration date */
 		if( SeenServ.expiretime > 0 && ( ( me.now - ( SeenServ.expiretime * TS_ONE_DAY ) ) > sdo->seentime ) )
 		{
+			strlcpy( nicklower, sdo->nick, MAXNICK );
 			DBADelete( "seendata", ns_strlwr(nicklower) );
 		}
 		ns_free( sdo );
@@ -531,7 +533,8 @@ int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype)
 				sd = lnode_get( ln );
 				if( maxageallowed > sd->seentime )
 				{
-					DBADelete( "seendata", sd->nick );
+					strlcpy( nicklower, sd->nick, MAXNICK );
+					DBADelete( "seendata", ns_strlwr(nicklower) );
 					ns_free( sd );
 					list_delete( seenlist, ln );
 					lnode_destroy( ln );
@@ -560,7 +563,8 @@ int sns_cmd_del(const CmdParams *cmdparams)
 		sd = lnode_get(ln);
 		if (match(cmdparams->av[0], sd->userhost) || match(cmdparams->av[0], sd->uservhost)) 
 		{
-			DBADelete( "seendata", sd->nick);
+			strlcpy( nicklower, sd->nick, MAXNICK );
+			DBADelete( "seendata", ns_strlwr( nicklower ) );
 			i++;
 			ns_free(sd);
 			ln2 = list_next(seenlist, ln);
