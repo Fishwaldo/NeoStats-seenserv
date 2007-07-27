@@ -2,6 +2,8 @@ SeenServ Module for NeoStats Changelog.
 Fish (F), Mark (M), DeadNotBuried (D)
 ==============================================================================
 3.0.b1-dev
+ - add ExtraSeenChans list to allow SeenServ to sit in multiple channels (D)
+ - fix deletion of records from DB (D)
  - fix removal of records from DB when using memory list only (D)
  - help fixups (D)
 3.0.a3

@@ -83,6 +83,11 @@ typedef struct SeenData {
 	int recordsaved;
 } SeenData;
 
+typedef struct ExtraSeenChans {
+	char name[MAXCHANLEN];
+	Channel *c;
+} ExtraSeenChans;
+
 /* SeenServ Module Help - seenserv_help.c */
 extern const char *sns_help_set_exclusions[];
 extern const char *sns_help_set_enable[];
@@ -103,6 +108,7 @@ extern const char *sns_help_seen[];
 extern const char *sns_help_seennick[];
 extern const char *sns_help_del[];
 extern const char *sns_help_status[];
+extern const char *sns_help_chan[];
 
 /* events.c */
 int SeenSignon (const CmdParams *cmdparams);
@@ -115,6 +121,15 @@ int SeenKicked (const CmdParams *cmdparams);
 
 /* seenserv.c */
 int removeagedseenrecords(void *);
+int sns_cmd_chan(const CmdParams *cmdparams);
+int sns_sort_chanlist( const void *key1, const void *key2 );
+int loadseenchanrecords(void *data, int size);
+void createseenlist(void);
+void loadseenchandata(void);
+void destroyseenchanlist(void);
+int SeenNewChan (const CmdParams *cmdparams);
+int SeenDelChan (const CmdParams *cmdparams);
+
 
 /* seen.c */
 int removepreviousnick(char *nick);
@@ -125,6 +140,7 @@ void createseenlist(void);
 void loadseendata(void);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
+void seen_report( const CmdParams *cmdparams, const char *fmt, ... );
 int sns_cmd_seenhost(const CmdParams *cmdparams);
 int sns_cmd_seennick(const CmdParams *cmdparams);
 int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype);

@@ -23,6 +23,7 @@
 #include "neostats.h"    /* Required for bot support */
 #include "seenserv.h"
 
+static list_t *seenchanlist;
 
 static int sns_set_enablechan (const CmdParams *cmdparams, SET_REASON reason);
 static int sns_set_seenchan (const CmdParams *cmdparams, SET_REASON reason);
@@ -61,6 +62,7 @@ static bot_cmd sns_commands[]=
 	{"SEENNICK",	sns_cmd_seennick,	1,	0,			sns_help_seennick},
 	{"DEL",		sns_cmd_del,		1,	NS_ULEVEL_ADMIN,	sns_help_del},
 	{"STATUS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status},
+	{"CHAN",	sns_cmd_chan,		0,	NS_ULEVEL_ADMIN,	sns_help_chan},
 	NS_CMD_END()
 };
 
@@ -115,6 +117,8 @@ ModuleEvent module_events[] = {
 	{EVENT_JOIN,		SeenJoinChan,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_PART,		SeenPartChan,		EVENT_FLAG_EXCLUDE_ME},
 	{EVENT_KICK,		SeenKicked,		EVENT_FLAG_EXCLUDE_ME},
+	{EVENT_NEWCHAN,		SeenNewChan,		0},
+	{EVENT_DELCHAN,		SeenDelChan,		0},
 	NS_EVENT_END()
 };
 
@@ -136,6 +140,9 @@ static BotInfo sns_botinfo =
 */
 int ModSynch (void)
 {
+	ExtraSeenChans *esc;
+	lnode_t *ln;
+
 	/* Introduce a bot onto the network */
 	sns_bot = AddBot (&sns_botinfo);	
 	if (!sns_bot)
@@ -145,6 +152,15 @@ int ModSynch (void)
 		irc_chanalert (sns_bot, "Seen Channel Now Available in %s", SeenServ.seenchan);
 	} else {
 		irc_chanalert (sns_bot, "Seen Channel Not Enabled");
+	}
+	ln = list_first(seenchanlist);
+	while (ln != NULL)
+	{
+		esc = lnode_get(ln);
+		esc->c = FindChannel(esc->name);
+		if (esc->c)
+			irc_join (sns_bot, esc->name, "+o");
+		ln = list_next(seenchanlist, ln);
 	}
 	AddTimer (TIMER_TYPE_DAILY, removeagedseenrecords, "removeagedseenrecords", 0, NULL);
 	AddTimer (TIMER_TYPE_INTERVAL, dbsavetimer, "seenservdbsavetimer", SeenServ.dbupdatetime, NULL);
@@ -161,6 +177,8 @@ int ModInit( void )
 	createseenlist();
 	if( SeenServ.memorylist )
 		loadseendata();
+	seenchanlist = list_create( LISTCOUNT_T_MAX );
+	loadseenchandata();
 	return NS_SUCCESS;
 }
 
@@ -172,6 +190,7 @@ int ModFini( void )
 	DelTimer ("seenservdbsavetimer");
 	DelTimer ("removeagedseenrecords");
 	dbsavetimer(NULL);
+	destroyseenchanlist();
 	destroyseenlist();
 	DBACloseTable("seendata");
 	return NS_SUCCESS;
@@ -408,3 +427,171 @@ int removeagedseenrecords(void *userptr)
 	return NS_SUCCESS;
 }
 
+/*
+ * Add/Remove/List Extra Seen Chans
+*/
+int sns_cmd_chan (const CmdParams *cmdparams)
+{
+	ExtraSeenChans *esc;
+	lnode_t *ln;
+
+	if (!ircstrcasecmp(cmdparams->av[0], "LIST"))
+	{
+		ln = list_first(seenchanlist);
+		while (ln != NULL)
+		{
+			esc = lnode_get(ln);
+			seen_report( cmdparams, "%s %s", esc->name, esc->c ? "(Open)" : "" );
+			ln = list_next(seenchanlist, ln);
+		}
+		seen_report( cmdparams, "End Of List" );
+		return NS_SUCCESS;
+	} else {
+		if (cmdparams->ac > 1)
+		{
+			if (!ircstrcasecmp(cmdparams->av[0], "ADD"))
+			{
+				ln = list_first(seenchanlist);
+				while (ln != NULL)
+				{
+					esc = lnode_get(ln);
+					if (!ircstrcasecmp(esc->name, cmdparams->av[1]))
+						break;
+					ln = list_next(seenchanlist, ln);
+				}
+				if (ln != NULL)
+				{
+					seen_report( cmdparams, "%s has already been added to the Extra Seen Chans List", cmdparams->av[1] );
+					return NS_SUCCESS;
+				}
+				esc = ns_calloc( sizeof( ExtraSeenChans ) );
+				strlcpy(esc->name, cmdparams->av[1], MAXCHANLEN);
+				esc->c = NULL;
+				ns_strlwr(esc->name);
+				lnode_create_append( seenchanlist, esc );
+				DBAStore( "ExtraSeenChans", esc->name, ( void * )esc, sizeof( ExtraSeenChans ) );
+				esc->c = FindChannel(esc->name);
+				if (esc->c)
+					irc_join (sns_bot, esc->name, "+o");
+				seen_report( cmdparams, "%s added to the Extra Seen Chans List", cmdparams->av[1] );
+				list_sort( seenchanlist, sns_sort_chanlist );
+				return NS_SUCCESS;
+			} else if (!ircstrcasecmp(cmdparams->av[0], "DEL")) {
+				ln = list_first(seenchanlist);
+				while (ln != NULL)
+				{
+					esc = lnode_get(ln);
+					if (!ircstrcasecmp(esc->name, cmdparams->av[1]))
+						break;
+					ln = list_next(seenchanlist, ln);
+				}
+				if (ln == NULL)
+				{
+					seen_report( cmdparams, "%s is not an Extra Seen Chan", cmdparams->av[1] );
+					return NS_SUCCESS;
+				}
+				irc_part (sns_bot, esc->name, NULL);
+				DBADelete( "ExtraSeenChans", esc->name);
+				list_delete(seenchanlist, ln);
+				lnode_destroy(ln);
+				seen_report( cmdparams, "%s removed from the Extra Seen Chans List", cmdparams->av[1] );
+				ns_free(esc);
+			}
+		}
+	}
+	return NS_SUCCESS;
+}
+
+int sns_sort_chanlist( const void *key1, const void *key2 ) {
+	const ExtraSeenChans *esc1 = key1;
+	const ExtraSeenChans *esc2 = key2;
+	return( ircstrcasecmp( esc1->name, esc2->name ) );
+}
+
+/*
+ * Load Saved Seen Records
+*/
+int loadseenchanrecords(void *data, int size)
+{
+	ExtraSeenChans *esc;
+
+	esc = ns_calloc( sizeof( ExtraSeenChans ) );
+	os_memcpy( esc, data, sizeof( ExtraSeenChans ) );
+	lnode_create_append( seenchanlist, esc );
+	return NS_FALSE;
+}
+
+void loadseenchandata(void)
+{
+	DBAFetchRows( "ExtraSeenChans", loadseenchanrecords );
+	list_sort( seenchanlist, sns_sort_chanlist );
+	return;
+}
+
+/*
+ * Destroy Seen Chan List
+*/
+void destroyseenchanlist(void)
+{
+	lnode_t *ln, *ln2;
+	ExtraSeenChans *esc;
+
+	ln = list_first(seenchanlist);
+	while( ln )
+	{
+		esc = lnode_get(ln);
+		ln2 = list_next( seenchanlist, ln );
+		ns_free(esc);
+		list_delete(seenchanlist, ln);
+		lnode_destroy(ln);
+		ln = ln2;
+	}
+	list_destroy_auto(seenchanlist);
+}
+
+/*
+ *  Join on channel creation / Part on Empty Channel
+ */
+int SeenNewChan (const CmdParams *cmdparams) 
+{
+	lnode_t *ln;
+	ExtraSeenChans *esc;
+
+	SET_SEGV_LOCATION();
+	ln = list_first(seenchanlist);
+	while( ln )
+	{
+		esc = lnode_get(ln);
+		if( !ircstrcasecmp( esc->name , cmdparams->channel->name ) )
+		{
+			esc->c = cmdparams->channel;
+			irc_join (sns_bot, esc->name, "+o");
+			break;
+		}
+		ln = list_next( seenchanlist, ln );
+	}
+	return NS_SUCCESS;
+}
+
+int SeenDelChan (const CmdParams *cmdparams) 
+{
+	lnode_t *ln;
+	ExtraSeenChans *esc;
+
+	SET_SEGV_LOCATION();
+	if( cmdparams->channel->users != 1 )
+		return NS_SUCCESS;
+	ln = list_first(seenchanlist);
+	while( ln )
+	{
+		esc = lnode_get(ln);
+		if( !ircstrcasecmp( esc->name , cmdparams->channel->name ) )
+		{
+			irc_part (sns_bot, esc->name, NULL);
+			esc->c = NULL;
+			break;
+		}
+		ln = list_next( seenchanlist, ln );
+	}
+	return NS_SUCCESS;
+}

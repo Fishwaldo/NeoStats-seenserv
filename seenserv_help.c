@@ -157,3 +157,20 @@ const char *sns_help_status[] = {
 	"NOTE: Statistics Unavailable when using DB only.",
 	NULL
 };
+
+const char *sns_help_chan[] = {
+	"Manage the Site Operators List",
+	"Syntax: \2CHAN ADD <#channel>\2",
+	"Syntax: \2CHAN DEL <#channel>\2",
+	"Syntax: \2CHAN LIST\2",
+	"",
+	"LIST :",
+	"Lists Extra Seen Channels",
+	"",
+	"ADD :",
+	"Add an extra Seen Channel",
+	"",
+	"DEL :",
+	"Delete extra Seen Channel",
+	NULL
+};

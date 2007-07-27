@@ -110,6 +110,7 @@ int SeenPartChan (const CmdParams *cmdparams)
 		strlcpy(tmpmsg, cmdparams->channel->name, SS_MESSAGESIZE);
 	}
 	addseenentry(cmdparams->source->name, cmdparams->source->user->userhostmask, cmdparams->source->user->uservhostmask, tmpmsg, SS_PART);
+	SeenDelChan(cmdparams);
 	return NS_SUCCESS;
 }
 
