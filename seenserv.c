@@ -587,7 +587,6 @@ int SeenDelChan (const CmdParams *cmdparams)
 		esc = lnode_get(ln);
 		if( !ircstrcasecmp( esc->name , cmdparams->channel->name ) )
 		{
-			irc_part (sns_bot, esc->name, NULL);
 			esc->c = NULL;
 			break;
 		}
