@@ -148,7 +148,7 @@ int ModSynch (void)
 	if (!sns_bot)
 		return NS_FAILURE;
 	if (SeenServ.enableseenchan) {
-		irc_join (sns_bot, SeenServ.seenchan, "+o");
+		irc_join (sns_bot, SeenServ.seenchan, me.servicescmode );
 		irc_chanalert (sns_bot, "Seen Channel Now Available in %s", SeenServ.seenchan);
 	} else {
 		irc_chanalert (sns_bot, "Seen Channel Not Enabled");
@@ -159,7 +159,7 @@ int ModSynch (void)
 		esc = lnode_get(ln);
 		esc->c = FindChannel(esc->name);
 		if (esc->c)
-			irc_join (sns_bot, esc->name, "+o");
+			irc_join (sns_bot, esc->name, me.servicescmode );
 		ln = list_next(seenchanlist, ln);
 	}
 	AddTimer (TIMER_TYPE_DAILY, removeagedseenrecords, "removeagedseenrecords", 0, NULL);
@@ -207,7 +207,7 @@ static int sns_set_enablechan (const CmdParams *cmdparams, SET_REASON reason)
 	{
 		if (SeenServ.enableseenchan) 
 		{
-			irc_join (sns_bot, SeenServ.seenchan, "+o");
+			irc_join (sns_bot, SeenServ.seenchan, me.servicescmode );
 			irc_chanalert (sns_bot, "Seen functions now available in %s", SeenServ.seenchan);
 			return NS_SUCCESS;
 		} else {
@@ -236,7 +236,7 @@ static int sns_set_seenchan (const CmdParams *cmdparams, SET_REASON reason)
 	}
 	if (reason == SET_CHANGE) 
 	{
-		irc_join (sns_bot, SeenServ.seenchan, "+o");
+		irc_join (sns_bot, SeenServ.seenchan, me.servicescmode );
 		irc_chanalert (sns_bot, "Seen functions now available in %s", SeenServ.seenchan);
 		return NS_SUCCESS;
 	}
@@ -472,7 +472,7 @@ int sns_cmd_chan (const CmdParams *cmdparams)
 				DBAStore( "ExtraSeenChans", esc->name, ( void * )esc, sizeof( ExtraSeenChans ) );
 				esc->c = FindChannel(esc->name);
 				if (esc->c)
-					irc_join (sns_bot, esc->name, "+o");
+					irc_join (sns_bot, esc->name, me.servicescmode );
 				seen_report( cmdparams, "%s added to the Extra Seen Chans List", cmdparams->av[1] );
 				list_sort( seenchanlist, sns_sort_chanlist );
 				return NS_SUCCESS;
@@ -565,7 +565,7 @@ int SeenNewChan (const CmdParams *cmdparams)
 		if( !ircstrcasecmp( esc->name , cmdparams->channel->name ) )
 		{
 			esc->c = cmdparams->channel;
-			irc_join (sns_bot, esc->name, "+o");
+			irc_join (sns_bot, esc->name, me.servicescmode );
 			break;
 		}
 		ln = list_next( seenchanlist, ln );
