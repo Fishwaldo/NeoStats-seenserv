@@ -490,7 +490,8 @@ int sns_cmd_chan (const CmdParams *cmdparams)
 					seen_report( cmdparams, "%s is not an Extra Seen Chan", cmdparams->av[1] );
 					return NS_SUCCESS;
 				}
-				irc_part (sns_bot, esc->name, NULL);
+				if( esc->c != NULL && IsChannelMember( esc->c, sns_bot->u ) )
+					irc_part (sns_bot, esc->name, NULL);
 				DBADelete( "ExtraSeenChans", esc->name);
 				list_delete(seenchanlist, ln);
 				lnode_destroy(ln);
