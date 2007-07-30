@@ -250,6 +250,8 @@ void seen_report( const CmdParams *cmdparams, const char *fmt, ... )
 */
 static int SeenAvailable( const CmdParams *cmdparams )
 {
+	if( strstr(cmdparams->av[0], "%") != NULL )
+		return NS_FALSE;
 	if( cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER )
 	{
 		if( !SeenServ.enable && cmdparams->channel == NULL )
