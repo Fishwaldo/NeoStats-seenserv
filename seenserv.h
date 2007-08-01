@@ -83,6 +83,14 @@ typedef struct SeenData {
 	int recordsaved;
 } SeenData;
 
+/* this should be portable. See http://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html 
+ * and http://msdn2.microsoft.com/en-us/library/ms177415(VS.80).aspx and
+ * http://en.wikipedia.org/wiki/Variadic_macro
+ */
+#define seen_report(X, Y, ...) \
+	if (X->channel == NULL) irc_prefmsg (sns_bot, X->source, Y, ## __VA_ARGS__); \
+	else irc_chanprivmsg (sns_bot, X->channel->name, Y, ## __VA_ARGS__)
+
 typedef struct ExtraSeenChans {
 	char name[MAXCHANLEN];
 	Channel *c;
@@ -140,7 +148,9 @@ void createseenlist(void);
 void loadseendata(void);
 int sortlistbytime(const void *key1, const void *key2);
 void destroyseenlist(void);
+#if 0
 void seen_report( const CmdParams *cmdparams, const char *fmt, ... );
+#endif
 int sns_cmd_seenhost(const CmdParams *cmdparams);
 int sns_cmd_seennick(const CmdParams *cmdparams);
 int CheckSeenData(const CmdParams *cmdparams, SEEN_CHECK checktype);

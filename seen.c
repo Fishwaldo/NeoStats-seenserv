@@ -226,9 +226,14 @@ void destroyseenlist(void)
 	list_destroy_auto(seenlist);
 }
 
+#if 0
 /** seen_report
  *
  *  handles channel/user message selection
+ */
+/* we do this via a macro now, to avoid possible exploits, 
+ * see seenserv.h. If the macro isn't portable, then we can use this function now
+ * without having the exploit present, but its spins more CPU cycles!
  */
 static char seen_report_buf[BUFSIZE];
 
@@ -240,18 +245,20 @@ void seen_report( const CmdParams *cmdparams, const char *fmt, ... )
 	ircvsnprintf( seen_report_buf, BUFSIZE, fmt, ap );
 	va_end( ap );
 	if( cmdparams->channel == NULL )
-		irc_prefmsg (sns_bot, cmdparams->source, seen_report_buf );
+		irc_prefmsg (sns_bot, cmdparams->source, "%s", seen_report_buf );
 	else
-		irc_chanprivmsg (sns_bot, cmdparams->channel->name, seen_report_buf );
+		irc_chanprivmsg (sns_bot, cmdparams->channel->name, "%s" seen_report_buf );
 }
-
+#endif
 /*
  * Check whether we can run the seen command
 */
 static int SeenAvailable( const CmdParams *cmdparams )
 {
+#if 0
 	if( strstr(cmdparams->av[0], "%") != NULL )
 		return NS_FALSE;
+#endif
 	if( cmdparams->source->user->ulevel < NS_ULEVEL_LOCOPER )
 	{
 		if( !SeenServ.enable && cmdparams->channel == NULL )
