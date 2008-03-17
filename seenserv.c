@@ -62,7 +62,7 @@ static bot_cmd sns_commands[]=
 	{"SEENNICK",	sns_cmd_seennick,	1,	0,			sns_help_seennick},
 	{"DEL",		sns_cmd_del,		1,	NS_ULEVEL_ADMIN,	sns_help_del},
 	{"STATUS",	sns_cmd_status,		0,	NS_ULEVEL_LOCOPER,	sns_help_status},
-	{"CHAN",	sns_cmd_chan,		0,	NS_ULEVEL_ADMIN,	sns_help_chan},
+	{"CHAN",	sns_cmd_chan,		1,	NS_ULEVEL_ADMIN,	sns_help_chan},
 	NS_CMD_END()
 };
 
