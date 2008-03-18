@@ -135,7 +135,7 @@ const char *sns_help_seen[] = {
 
 const char *sns_help_seennick[] = {
 	"Displays Last Seen Nicks",
-	"Syntax: \2SEEN <nick>\2",
+	"Syntax: \2SEENNICK <nick>\2",
 	"",
 	"Displays the last seen entry of the matching nick.",
 	NULL

@@ -6,6 +6,7 @@ Fish (F), Mark (M), DeadNotBuried (D)
  - fix deletion of records from DB (D)
  - fix removal of records from DB when using memory list only (D)
  - help fixups (D)
+ - Fix Incorrect syntax for SEENNICK command (F)
 3.0.a3
  - add option to use DB only or in memory list for lookups (D)
  - save records to db on configurable timer (D)
